@@ -1,0 +1,100 @@
+@import "tailwindcss";
+
+:root {
+  /* Core palette - machined metal + flame */
+  --color-graphite: #16171a;
+  --color-panel: #1f2023;
+  --color-panel-raised: #26282c;
+  --color-paper: #edeae3;
+  --color-paper-dim: #b8b5ad;
+  --color-steel: #8a8d93;
+  --color-hairline: #34363b;
+  --color-flame: #ff7a1a;
+  --color-flame-bright: #ffa54d;
+  --color-flame-dim: #7a3d14;
+  --color-danger: #e5484d;
+  --color-success: #3fb950;
+}
+
+@theme inline {
+  --color-graphite: var(--color-graphite);
+  --color-panel: var(--color-panel);
+  --color-panel-raised: var(--color-panel-raised);
+  --color-paper: var(--color-paper);
+  --color-paper-dim: var(--color-paper-dim);
+  --color-steel: var(--color-steel);
+  --color-hairline: var(--color-hairline);
+  --color-flame: var(--color-flame);
+  --color-flame-bright: var(--color-flame-bright);
+  --color-flame-dim: var(--color-flame-dim);
+  --color-danger: var(--color-danger);
+  --color-success: var(--color-success);
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+* {
+  border-color: var(--color-hairline);
+}
+
+body {
+  font-family: var(--font-body), sans-serif;
+}
+
+h1, h2, h3, h4, .font-display {
+  font-family: var(--font-display), sans-serif;
+}
+
+.font-mono-tech {
+  font-family: var(--font-mono), monospace;
+}
+
+.grain-overlay {
+  position: relative;
+}
+.grain-overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes flicker {
+  0%, 100% { opacity: 1; transform: scaleY(1) scaleX(1); }
+  25% { opacity: 0.85; transform: scaleY(1.05) scaleX(0.97); }
+  50% { opacity: 0.95; transform: scaleY(0.96) scaleX(1.02); }
+  75% { opacity: 0.9; transform: scaleY(1.02) scaleX(0.98); }
+}
+.animate-flicker {
+  animation: flicker 2.2s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes strike {
+  0% { opacity: 0; transform: scale(0.3) rotate(-8deg); }
+  40% { opacity: 1; transform: scale(1.15) rotate(2deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}
+.animate-strike {
+  animation: strike 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-flicker, .animate-strike {
+    animation: none !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-flame);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-flame);
+  color: var(--color-graphite);
+}

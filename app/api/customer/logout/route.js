@@ -1,0 +1,10 @@
+import { NextResponse } from "next/server";
+import { clearCustomerSession } from "@/lib/auth/customerSession";
+
+export async function POST() {
+  await clearCustomerSession();
+  
+  return NextResponse.json({ success: true });
+}
+
+// Made with Bob

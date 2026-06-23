@@ -1,0 +1,101 @@
+/* Dark theme styling for react-phone-number-input */
+
+.phone-input-dark {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* Country selector button */
+.phone-input-dark .PhoneInputCountry {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: rgb(38, 38, 38);
+  border: 1px solid rgb(64, 64, 64);
+  border-radius: 0.375rem;
+  color: rgb(229, 229, 229);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.phone-input-dark .PhoneInputCountry:hover {
+  border-color: rgb(255, 87, 51);
+}
+
+.phone-input-dark .PhoneInputCountry:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(255, 87, 51);
+  border-color: rgb(255, 87, 51);
+}
+
+/* Country flag icon */
+.phone-input-dark .PhoneInputCountryIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-right: 0.5rem;
+}
+
+.phone-input-dark .PhoneInputCountryIcon--border {
+  box-shadow: none;
+  background-color: transparent;
+}
+
+/* Dropdown arrow */
+.phone-input-dark .PhoneInputCountrySelectArrow {
+  width: 0.5rem;
+  height: 0.5rem;
+  margin-left: 0.5rem;
+  opacity: 0.7;
+  border-color: rgb(229, 229, 229);
+}
+
+/* Phone number input field */
+.phone-input-dark .PhoneInputInput {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  background-color: rgb(38, 38, 38);
+  border: 1px solid rgb(64, 64, 64);
+  border-radius: 0.375rem;
+  color: rgb(229, 229, 229);
+  font-size: 0.875rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.phone-input-dark .PhoneInputInput:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(255, 87, 51);
+  border-color: rgb(255, 87, 51);
+}
+
+.phone-input-dark .PhoneInputInput::placeholder {
+  color: rgb(163, 163, 163);
+}
+
+/* Country dropdown */
+.PhoneInputCountrySelect {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 0.25rem;
+  width: 20rem;
+  max-height: 24rem;
+  overflow-y: auto;
+  background-color: rgb(38, 38, 38);
+  border: 1px solid rgb(64, 64, 64);
+  border-radius: 0.375rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+.PhoneInputCountrySelect option {
+  padding: 0.5rem 0.75rem;
+  color: rgb(229, 229, 229);
+  cursor: pointer;
+}
+
+.PhoneInputCountrySelect option:hover {
+  background-color: rgb(48, 48, 48);
+}
+
+/* Made with Bob */
