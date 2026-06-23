@@ -27,6 +27,46 @@ export async function POST(request) {
   await dbConnect();
 
   switch (event.type) {
+    case "checkout.session.completed": {
+      const session = event.data.object;
+      console.log('Checkout session completed:', session.id);
+      console.log('Payment intent:', session.payment_intent);
+      
+      // Find order by session ID or payment intent
+      let order = await Order.findOne({
+        $or: [
+          { stripeSessionId: session.id },
+          { stripePaymentIntentId: session.payment_intent }
+        ]
+      }).populate('items.product');
+      
+      if (!order) {
+        console.log('No order found for session:', session.id);
+        break;
+      }
+      
+      console.log('Order found:', order.orderNumber, 'Status:', order.paymentStatus);
+      
+      if (order.paymentStatus !== "paid") {
+        order.paymentStatus = "paid";
+        order.fulfillmentStatus = "processing";
+        await order.save();
+        console.log('Order status updated to paid:', order.orderNumber);
+        
+        // Send order confirmation email
+        console.log('Attempting to send email to:', order.customerEmail);
+        try {
+          const emailResult = await sendOrderConfirmationEmail(order);
+          console.log('Email send result:', emailResult);
+        } catch (emailError) {
+          console.error('Email send failed:', emailError);
+          // Don't fail the webhook if email fails
+        }
+      } else {
+        console.log('Order already marked as paid, skipping email');
+      }
+      break;
+    }
     case "payment_intent.succeeded": {
       const intent = event.data.object;
       console.log('Payment succeeded for intent:', intent.id);
@@ -48,8 +88,13 @@ export async function POST(request) {
         
         // Send order confirmation email
         console.log('Attempting to send email to:', order.customerEmail);
-        const emailResult = await sendOrderConfirmationEmail(order);
-        console.log('Email send result:', emailResult);
+        try {
+          const emailResult = await sendOrderConfirmationEmail(order);
+          console.log('Email send result:', emailResult);
+        } catch (emailError) {
+          console.error('Email send failed:', emailError);
+          // Don't fail the webhook if email fails
+        }
       } else {
         console.log('Order already marked as paid, skipping email');
       }
