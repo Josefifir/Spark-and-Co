@@ -30,10 +30,10 @@ export default function Header() {
 
   return (
     <header className="sticky top-0 z-40 bg-graphite/90 backdrop-blur border-b border-hairline">
-      <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="text-flame text-xl group-hover:animate-flicker">🔥</span>
-          <span className="font-display font-bold text-lg tracking-tight text-paper">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+        <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group">
+          <span className="text-flame text-lg sm:text-xl group-hover:animate-flicker">🔥</span>
+          <span className="font-display font-bold text-base sm:text-lg tracking-tight text-paper whitespace-nowrap">
             STRIKE&nbsp;&&nbsp;CO.
           </span>
         </Link>
@@ -56,28 +56,30 @@ export default function Header() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-2">
-          <LanguageSwitcher />
-          <CurrencySwitcher />
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <div className="hidden sm:flex items-center gap-2">
+            <LanguageSwitcher />
+            <CurrencySwitcher />
+          </div>
           <span className="hidden lg:flex items-center gap-1.5 text-xs text-steel font-mono-tech">
             <ShieldCheck className="w-3.5 h-3.5" />
             {t('nav.encryptedCheckout')}
           </span>
           <Link
             href={isLoggedIn ? "/account" : "/login"}
-            className="flex items-center justify-center w-10 h-10 rounded-sm border border-hairline hover:border-steel transition-colors"
+            className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-sm border border-hairline hover:border-steel transition-colors"
             aria-label={isLoggedIn ? "My Account" : "Sign In"}
           >
-            <User className="w-4.5 h-4.5 text-paper" />
+            <User className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-paper" />
           </Link>
           <Link
             href="/cart"
-            className="relative flex items-center justify-center w-10 h-10 rounded-sm border border-hairline hover:border-steel transition-colors"
+            className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-sm border border-hairline hover:border-steel transition-colors"
             aria-label={`${t('nav.cart')}, ${itemCount} items`}
           >
-            <ShoppingBag className="w-4.5 h-4.5 text-paper" />
+            <ShoppingBag className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-paper" />
             {itemCount > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-flame text-graphite text-[10px] font-bold w-4.5 h-4.5 min-w-[18px] min-h-[18px] rounded-full flex items-center justify-center">
+              <span className="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 bg-flame text-graphite text-[9px] sm:text-[10px] font-bold w-4 h-4 sm:w-4.5 sm:h-4.5 min-w-[16px] min-h-[16px] sm:min-w-[18px] sm:min-h-[18px] rounded-full flex items-center justify-center">
                 {itemCount}
               </span>
             )}
