@@ -39,7 +39,7 @@ export default function AgeGate({ children }) {
             enter. By continuing, you confirm that you meet the minimum age requirement in your
             jurisdiction.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center px-2">
+          <div className="space-y-3 sm:space-y-0 sm:flex sm:flex-row sm:gap-3 sm:justify-center px-2">
             <Button
               variant="primary"
               size="lg"
@@ -47,7 +47,7 @@ export default function AgeGate({ children }) {
                 setVerifiedCookie();
                 setVerified(true);
               }}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto block sm:inline-flex"
             >
               I am 18 or older — Enter
             </Button>
@@ -57,7 +57,7 @@ export default function AgeGate({ children }) {
               onClick={() => {
                 window.location.href = "https://www.google.com";
               }}
-              className="w-full sm:w-auto"
+              className="w-full sm:w-auto block sm:inline-flex"
             >
               Exit
             </Button>
