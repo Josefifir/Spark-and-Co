@@ -28,18 +28,18 @@ export default function AgeGate({ children }) {
 
   if (!verified) {
     return (
-      <div className="fixed inset-0 z-50 bg-graphite grain-overlay flex items-center justify-center p-6">
+      <div className="fixed inset-0 z-50 bg-graphite grain-overlay flex items-center justify-center p-4 sm:p-6">
         <div className="max-w-md w-full text-center">
-          <div className="w-14 h-14 mx-auto mb-6 rounded-full bg-flame/10 border border-flame/30 flex items-center justify-center">
-            <span className="text-2xl text-flame animate-flicker">🔥</span>
+          <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 sm:mb-6 rounded-full bg-flame/10 border border-flame/30 flex items-center justify-center">
+            <span className="text-xl sm:text-2xl text-flame animate-flicker">🔥</span>
           </div>
-          <h1 className="font-display text-2xl text-paper mb-3">Age Verification Required</h1>
-          <p className="text-paper-dim text-sm leading-relaxed mb-8">
+          <h1 className="font-display text-xl sm:text-2xl text-paper mb-2 sm:mb-3">Age Verification Required</h1>
+          <p className="text-paper-dim text-xs sm:text-sm leading-relaxed mb-6 sm:mb-8 px-2">
             This site sells lighters and related products. You must be 18 years or older to
             enter. By continuing, you confirm that you meet the minimum age requirement in your
             jurisdiction.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center px-2">
             <Button
               variant="primary"
               size="lg"
@@ -47,6 +47,7 @@ export default function AgeGate({ children }) {
                 setVerifiedCookie();
                 setVerified(true);
               }}
+              className="w-full sm:w-auto"
             >
               I am 18 or older — Enter
             </Button>
@@ -56,6 +57,7 @@ export default function AgeGate({ children }) {
               onClick={() => {
                 window.location.href = "https://www.google.com";
               }}
+              className="w-full sm:w-auto"
             >
               Exit
             </Button>
