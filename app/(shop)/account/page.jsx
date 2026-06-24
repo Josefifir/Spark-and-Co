@@ -100,16 +100,18 @@ export default function AccountProfilePage() {
 
   return (
     <div className="bg-panel rounded-lg border border-hairline p-4 sm:p-6">
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 mb-6">
-        <h2 className="text-xl sm:text-2xl font-bold text-paper">Profile Information</h2>
-        {!editing && (
-          <button
-            onClick={() => setEditing(true)}
-            className="px-4 py-2 bg-flame text-graphite rounded-md hover:bg-flame-bright transition-colors font-medium"
-          >
-            Edit Profile
-          </button>
-        )}
+      <div className="mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold text-paper">Profile Information</h2>
+          {!editing && (
+            <button
+              onClick={() => setEditing(true)}
+              className="w-full sm:w-auto px-4 py-2 bg-flame text-graphite rounded-md hover:bg-flame-bright transition-colors font-medium text-sm sm:text-base"
+            >
+              Edit Profile
+            </button>
+          )}
+        </div>
       </div>
 
       {message.text && (
