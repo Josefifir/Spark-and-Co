@@ -8,7 +8,7 @@ import { useLocale } from "@/lib/i18n/LocaleContext";
 import { calculateOrderVAT, isEUCountry } from "@/lib/utils-vat";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
-import { Lock, ShieldCheck, Bitcoin, CreditCard, Building2, Info } from "lucide-react";
+import { Lock, ShieldCheck, Bitcoin, CreditCard, Building2, Info, Truck, Package } from "lucide-react";
 import { toast } from "sonner";
 import StripePaymentForm from "@/components/shop/StripePaymentForm";
 import { getData } from 'country-list';
@@ -49,6 +49,9 @@ export default function CheckoutPage() {
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [customer, setCustomer] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [shippingRates, setShippingRates] = useState([]);
+  const [selectedShipping, setSelectedShipping] = useState(null);
+  const [loadingShipping, setLoadingShipping] = useState(false);
 
   // Fetch customer and saved addresses on mount
   useEffect(() => {
@@ -126,6 +129,60 @@ export default function CheckoutPage() {
     calculateVAT(form.country);
   }, [subtotalCents, appliedDiscount, form.country]);
 
+  // Calculate shipping when address changes
+  useEffect(() => {
+    if (form.country && form.city && form.postalCode) {
+      calculateShipping();
+    } else {
+      setShippingRates([]);
+      setSelectedShipping(null);
+    }
+  }, [form.country, form.city, form.postalCode, form.state, subtotalCents, appliedDiscount]);
+
+  async function calculateShipping() {
+    setLoadingShipping(true);
+    try {
+      const finalSubtotal = appliedDiscount
+        ? subtotalCents - appliedDiscount.discountCents
+        : subtotalCents;
+
+      const res = await fetch("/api/shipping/calculate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          address: {
+            country: form.country,
+            state: form.state,
+            postalCode: form.postalCode,
+            city: form.city,
+          },
+          orderDetails: {
+            subtotalCents: finalSubtotal,
+            weightGrams: items.reduce((sum, item) => sum + (item.weightGrams || 100) * item.quantity, 0),
+            items,
+          },
+        }),
+      });
+
+      const data = await res.json();
+      setShippingRates(data.rates || []);
+      
+      // Auto-select first (cheapest/free) rate
+      if (data.rates && data.rates.length > 0) {
+        setSelectedShipping(data.rates[0]);
+      } else {
+        setSelectedShipping(null);
+      }
+    } catch (error) {
+      console.error("Failed to calculate shipping:", error);
+      toast.error("Failed to calculate shipping rates");
+      setShippingRates([]);
+      setSelectedShipping(null);
+    } finally {
+      setLoadingShipping(false);
+    }
+  }
+
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) {
       setAppliedDiscount(null);
@@ -195,6 +252,15 @@ export default function CheckoutPage() {
             postalCode: form.postalCode,
             country: form.country,
           },
+          shippingMethod: selectedShipping ? {
+            id: selectedShipping.id,
+            name: selectedShipping.name,
+            carrier: selectedShipping.carrier,
+            carrierService: selectedShipping.carrierService,
+            estimatedMinDays: selectedShipping.estimatedMinDays,
+            estimatedMaxDays: selectedShipping.estimatedMaxDays,
+            cost: selectedShipping.cost,
+          } : undefined,
           ageVerified: true,
           paymentMethod,
           discountCode: appliedDiscount?.code || undefined,
@@ -374,6 +440,68 @@ export default function CheckoutPage() {
             </div>
           </section>
 
+          {/* Shipping Method Selection */}
+          {shippingRates.length > 0 && (
+            <section>
+              <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
+                <Truck className="w-4 h-4 inline mr-2" />
+                Shipping Method
+              </h2>
+              {loadingShipping ? (
+                <div className="text-center py-8 text-paper-dim">
+                  <Package className="w-8 h-8 animate-pulse mx-auto mb-2" />
+                  <p className="text-sm">Calculating shipping rates...</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {shippingRates.map((rate) => (
+                    <button
+                      key={rate.id}
+                      type="button"
+                      onClick={() => setSelectedShipping(rate)}
+                      className={`w-full text-left p-4 rounded-md border transition-colors ${
+                        selectedShipping?.id === rate.id
+                          ? "border-flame bg-flame/5"
+                          : "border-hairline hover:border-steel"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start gap-4">
+                        <div className="flex-1">
+                          <p className="font-medium text-paper text-sm sm:text-base">{rate.name}</p>
+                          {rate.description && (
+                            <p className="text-xs sm:text-sm text-paper-dim mt-1">{rate.description}</p>
+                          )}
+                          {rate.estimatedMinDays && rate.estimatedMaxDays && (
+                            <p className="text-xs text-steel mt-1.5 flex items-center gap-1">
+                              <Truck className="w-3 h-3" />
+                              {rate.estimatedMinDays === rate.estimatedMaxDays
+                                ? `${rate.estimatedMinDays} business day${rate.estimatedMinDays > 1 ? 's' : ''}`
+                                : `${rate.estimatedMinDays}-${rate.estimatedMaxDays} business days`}
+                            </p>
+                          )}
+                          {rate.carrier && (
+                            <p className="text-xs text-steel mt-0.5">
+                              via {rate.carrier.toUpperCase()}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right flex-shrink-0">
+                          {rate.isFree ? (
+                            <span className="text-flame font-medium text-sm sm:text-base">FREE</span>
+                          ) : (
+                            <span className="font-mono-tech text-paper text-sm sm:text-base">
+                              {formatPrice(rate.cost)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
+
           <section>
             <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
               {t('checkout.promoCode')}
@@ -461,25 +589,11 @@ export default function CheckoutPage() {
             </label>
             {errors.age && <p className="text-xs text-danger mt-2">{errors.age}</p>}
           </section>
-
-          <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-            {submitting
-              ? t('common.loading')
-              : paymentMethod === "bitcoin"
-              ? t('checkout.continueToBitcoin')
-              : paymentMethod === "sepa"
-              ? t('checkout.continueToSepa')
-              : t('checkout.continueToPayment')}
-          </Button>
-
-          <div className="flex items-center gap-2 text-xs text-steel">
-            <Lock className="w-3.5 h-3.5" /> {t('checkout.securePayment')}
-          </div>
         </form>
 
         {/* Order summary */}
         <div>
-          <div className="border border-hairline rounded-sm p-5 sticky top-24">
+          <div className="border border-hairline rounded-sm p-5 lg:sticky lg:top-24">
             <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
               {t('checkout.orderSummary')}
             </h2>
@@ -509,6 +623,22 @@ export default function CheckoutPage() {
                 </div>
               )}
               
+              {selectedShipping && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-paper-dim flex items-center gap-1.5">
+                    <Truck className="w-3.5 h-3.5" />
+                    Shipping ({selectedShipping.name})
+                  </span>
+                  <span className="font-mono-tech text-paper">
+                    {selectedShipping.isFree ? (
+                      <span className="text-flame font-medium">FREE</span>
+                    ) : (
+                      formatPrice(selectedShipping.cost)
+                    )}
+                  </span>
+                </div>
+              )}
+              
               {vatBreakdown && (
                 <>
                   <div className="flex justify-between text-sm text-paper-dim">
@@ -532,8 +662,33 @@ export default function CheckoutPage() {
             <div className="border-t border-hairline pt-4 flex justify-between">
               <span className="text-paper font-medium">{t('checkout.total')}</span>
               <span className="font-mono-tech text-flame font-medium">
-                {formatPrice(finalSubtotal)}
+                {formatPrice(finalSubtotal + (selectedShipping?.cost || 0))}
               </span>
+            </div>
+            
+            <div className="mt-6 space-y-3">
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full"
+                disabled={submitting}
+                onClick={(e) => {
+                  e.preventDefault();
+                  document.querySelector('form').requestSubmit();
+                }}
+              >
+                {submitting
+                  ? t('common.loading')
+                  : paymentMethod === "bitcoin"
+                  ? t('checkout.continueToBitcoin')
+                  : paymentMethod === "sepa"
+                  ? t('checkout.continueToSepa')
+                  : t('checkout.continueToPayment')}
+              </Button>
+
+              <div className="flex items-center justify-center gap-2 text-xs text-steel">
+                <Lock className="w-3.5 h-3.5" /> {t('checkout.securePayment')}
+              </div>
             </div>
             
             <div className="mt-5 flex items-center gap-2 text-xs text-steel">

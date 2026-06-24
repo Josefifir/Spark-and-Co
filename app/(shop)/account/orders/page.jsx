@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Package, ChevronRight } from "lucide-react";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);

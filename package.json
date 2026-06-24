@@ -9,7 +9,8 @@
     "lint": "eslint",
     "seed:admin": "node scripts/seed-admin.js",
     "seed:products": "node scripts/seed-products.js",
-    "seed:categories": "node scripts/seed-categories.js"
+    "seed:categories": "node scripts/seed-categories.js",
+    "seed:shipping": "node scripts/seed-shipping-zones.js"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.17",

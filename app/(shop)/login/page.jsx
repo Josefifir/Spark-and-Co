@@ -98,10 +98,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-graphite flex items-center justify-center py-12 px-4">
+    <div className="min-h-screen bg-graphite flex items-center justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full">
-        <div className="mb-8 text-center">
-          <h2 className="text-3xl font-bold text-paper mb-2">
+        <div className="mb-6 sm:mb-8 text-center">
+          <h2 className="text-2xl sm:text-3xl font-bold text-paper mb-2">
             {isLogin ? "Sign in to your account" : "Create your account"}
           </h2>
           <p className="text-sm text-paper-dim">
@@ -164,7 +164,7 @@ export default function LoginPage() {
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-paper-dim mb-1">
                   First Name

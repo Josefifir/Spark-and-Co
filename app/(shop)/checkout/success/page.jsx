@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { CheckCircle2, Clock, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, XCircle, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
 import Button from "@/components/ui/Button";
 
@@ -85,6 +85,38 @@ function CheckoutSuccessContent() {
               </div>
             ))}
           </div>
+          
+          {order.shippingMethod && (
+            <div className="mt-4 pt-4 border-t border-hairline">
+              <div className="flex items-start gap-3">
+                <Truck className="w-4 h-4 text-steel mt-0.5" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-paper">{order.shippingMethod.name}</p>
+                  {order.shippingMethod.carrier && (
+                    <p className="text-xs text-paper-dim mt-0.5">
+                      via {order.shippingMethod.carrier.toUpperCase()}
+                    </p>
+                  )}
+                  {order.shippingMethod.estimatedMinDays && order.shippingMethod.estimatedMaxDays && (
+                    <p className="text-xs text-steel mt-1">
+                      Estimated delivery: {order.shippingMethod.estimatedMinDays === order.shippingMethod.estimatedMaxDays
+                        ? `${order.shippingMethod.estimatedMinDays} business day${order.shippingMethod.estimatedMinDays > 1 ? 's' : ''}`
+                        : `${order.shippingMethod.estimatedMinDays}-${order.shippingMethod.estimatedMaxDays} business days`}
+                    </p>
+                  )}
+                </div>
+                <div className="text-right">
+                  {order.shippingCents === 0 ? (
+                    <span className="text-xs text-flame font-medium">FREE</span>
+                  ) : (
+                    <span className="text-xs font-mono-tech text-paper-dim">
+                      {formatPrice(order.shippingCents, order.currency)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           {order.paymentStatus === "pending" && (
             <p className="text-xs text-steel mt-4">
               If you paid with Bitcoin, confirmation can take a few minutes depending on network

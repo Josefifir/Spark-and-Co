@@ -31,6 +31,15 @@ const CheckoutSchema = z.object({
     postalCode: z.string().min(1).max(20),
     country: z.string().min(2).max(2), // ISO country code
   }),
+  shippingMethod: z.object({
+    id: z.string(),
+    name: z.string(),
+    carrier: z.string().optional(),
+    carrierService: z.string().optional(),
+    estimatedMinDays: z.number().optional(),
+    estimatedMaxDays: z.number().optional(),
+    cost: z.number().min(0),
+  }).optional(),
   ageVerified: z.literal(true, {
     errorMap: () => ({ message: "Age verification is required to purchase." }),
   }),
@@ -118,7 +127,8 @@ export async function POST(request) {
     discountCodeUsed = discountValidation.code;
   }
 
-  const totalCents = Math.max(0, subtotalCents - discountAppliedCents);
+  const shippingCents = body.shippingMethod?.cost || 0;
+  const totalCents = Math.max(0, subtotalCents - discountAppliedCents + shippingCents);
 
   // Determine currency based on shipping country
   const baseCurrency = 'USD'; // Products are stored in USD
@@ -128,11 +138,13 @@ export async function POST(request) {
   // Convert prices if needed
   let finalSubtotalCents = subtotalCents;
   let finalDiscountCents = discountAppliedCents;
+  let finalShippingCents = shippingCents;
   let finalTotalCents = totalCents;
 
   if (orderCurrency !== baseCurrency) {
     finalSubtotalCents = convertPrice(subtotalCents, baseCurrency, orderCurrency);
     finalDiscountCents = convertPrice(discountAppliedCents, baseCurrency, orderCurrency);
+    finalShippingCents = convertPrice(shippingCents, baseCurrency, orderCurrency);
     finalTotalCents = convertPrice(totalCents, baseCurrency, orderCurrency);
   }
 
@@ -186,6 +198,15 @@ export async function POST(request) {
     subtotalCents: finalSubtotalCents,
     discountAppliedCents: finalDiscountCents,
     discountCodeUsed,
+    shippingCents: finalShippingCents,
+    shippingMethod: body.shippingMethod ? {
+      name: body.shippingMethod.name,
+      carrier: body.shippingMethod.carrier,
+      carrierService: body.shippingMethod.carrierService,
+      estimatedMinDays: body.shippingMethod.estimatedMinDays,
+      estimatedMaxDays: body.shippingMethod.estimatedMaxDays,
+      cost: finalShippingCents,
+    } : null,
     totalCents: finalTotalCents,
     currency: orderCurrency.toLowerCase(),
     customer: session?.customerId || null, // Link to customer account if logged in
@@ -194,6 +215,9 @@ export async function POST(request) {
     ageVerifiedAt: new Date(),
     paymentMethod: body.paymentMethod,
     paymentStatus: "pending",
+    estimatedDeliveryDate: body.shippingMethod?.estimatedMaxDays
+      ? new Date(Date.now() + body.shippingMethod.estimatedMaxDays * 24 * 60 * 60 * 1000)
+      : null,
   });
 
   // Decrement stock optimistically (reserved). A more advanced version
