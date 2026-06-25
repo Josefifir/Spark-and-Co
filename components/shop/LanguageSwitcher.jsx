@@ -4,7 +4,9 @@ import { useState } from 'react';
 import { useLocale } from '@/lib/i18n/LocaleContext';
 import { getLocales } from '@/lib/i18n/LocaleContext';
 
-export default function LanguageSwitcher() {
+// align="right" (default) opens to the right of the button — correct in desktop header
+// align="left" opens to the left — correct in the mobile drawer (buttons are near left edge)
+export default function LanguageSwitcher({ align = "right" }) {
   const { locale, setLocale } = useLocale();
   const [isOpen, setIsOpen] = useState(false);
   const locales = getLocales();
@@ -25,7 +27,7 @@ export default function LanguageSwitcher() {
         aria-expanded={isOpen}
       >
         <span className="text-base">{currentLocale.flag}</span>
-        <span className="hidden sm:inline text-xs font-mono-tech">{currentLocale.code.toUpperCase()}</span>
+        <span className="text-xs font-mono-tech">{currentLocale.code.toUpperCase()}</span>
         <svg
           className={`w-3 h-3 transition-transform ${isOpen ? 'rotate-180' : ''}`}
           fill="none"
@@ -46,7 +48,7 @@ export default function LanguageSwitcher() {
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-40 bg-panel border border-hairline rounded-sm shadow-lg z-20">
+          <div className={`absolute ${align === "left" ? "left-0" : "right-0"} mt-2 w-40 bg-panel border border-hairline rounded-sm shadow-lg z-20`}>
             <div className="py-1">
               {locales.map((loc) => (
                 <button

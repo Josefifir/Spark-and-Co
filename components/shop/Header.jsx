@@ -42,10 +42,10 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm text-paper-dim">
+          {/* Desktop nav — xl breakpoint gives enough room for long German labels */}
+          <nav className="hidden xl:flex items-center gap-5 text-sm text-paper-dim">
             {navLinks.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-paper transition-colors">
+              <Link key={l.href} href={l.href} className="hover:text-paper transition-colors whitespace-nowrap">
                 {l.label}
               </Link>
             ))}
@@ -53,15 +53,11 @@ export default function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Desktop-only switchers + badge */}
+            {/* Desktop-only switchers */}
             <div className="hidden sm:flex items-center gap-2">
               <LanguageSwitcher />
               <CurrencySwitcher />
             </div>
-            <span className="hidden xl:flex items-center gap-1.5 text-xs text-steel font-mono-tech">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              {t("nav.encryptedCheckout")}
-            </span>
 
             {/* Account */}
             <Link
@@ -120,10 +116,10 @@ export default function Header() {
                   {l.label}
                 </Link>
               ))}
-              {/* Switchers in mobile menu */}
+              {/* Switchers in mobile menu — align="left" so dropdowns open rightward */}
               <div className="flex items-center gap-3 px-3 pt-4 mt-2 border-t border-hairline">
-                <LanguageSwitcher />
-                <CurrencySwitcher />
+                <LanguageSwitcher align="left" />
+                <CurrencySwitcher align="left" />
               </div>
             </nav>
           </div>

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { getSupportedCurrencies } from '@/lib/utils-currency-client';
 import { useCurrency } from '@/lib/currency/CurrencyContext';
 
-export default function CurrencySwitcher() {
+export default function CurrencySwitcher({ align = "right" }) {
   const { currency, setCurrency, getCurrencySymbol } = useCurrency();
   const [isOpen, setIsOpen] = useState(false);
   const currencies = getSupportedCurrencies();
@@ -44,7 +44,7 @@ export default function CurrencySwitcher() {
           />
           
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-44 bg-panel border border-hairline rounded-sm shadow-lg z-20">
+          <div className={`absolute ${align === "left" ? "left-0" : "right-0"} mt-2 w-44 bg-panel border border-hairline rounded-sm shadow-lg z-20`}>
             <div className="py-1">
               {currencies.map((curr) => (
                 <button
