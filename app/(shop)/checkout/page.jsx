@@ -279,7 +279,7 @@ export default function CheckoutPage() {
 
       setOrderNumber(data.orderNumber);
 
-      if (data.paymentMethod === "stripe" || data.paymentMethod === "sepa") {
+      if (data.paymentMethod === "stripe" || data.paymentMethod === "sepa" || data.paymentMethod === "revolut") {
         setStripeClientSecret(data.clientSecret);
         setSubmitting(false);
       } else if (data.paymentMethod === "bitcoin") {
@@ -310,7 +310,7 @@ export default function CheckoutPage() {
     return (
       <div className="max-w-md mx-auto px-6 py-16">
         <h1 className="font-display text-2xl font-bold text-paper mb-2">
-          {paymentMethod === "sepa" ? t('checkout.sepaDirectDebit') : t('checkout.payment')}
+          {paymentMethod === "sepa" ? t('checkout.sepaDirectDebit') : paymentMethod === "revolut" ? t('checkout.revolutPay') : t('checkout.payment')}
         </h1>
         <p className="text-sm text-paper-dim mb-8">
           {t('checkout.orderNumber')} {orderNumber} — {t('checkout.completePayment')}
@@ -323,6 +323,12 @@ export default function CheckoutPage() {
               <li>{t('checkout.sepaInfo.refund')}</li>
               <li>{t('checkout.sepaInfo.authorization')}</li>
             </ul>
+          </div>
+        )}
+        {paymentMethod === "revolut" && (
+          <div className="mb-6 p-4 bg-violet-50 border border-violet-200 rounded-md text-sm text-violet-900">
+            <p className="font-medium mb-1">🔵 {t('checkout.revolutInfo.title')}</p>
+            <p className="text-xs">{t('checkout.revolutInfo.description')}</p>
           </div>
         )}
         <StripePaymentForm
@@ -560,6 +566,16 @@ export default function CheckoutPage() {
               </button>
               <button
                 type="button"
+                onClick={() => setPaymentMethod("revolut")}
+                className={`flex items-center gap-2.5 justify-center border rounded-sm py-4 transition-colors ${
+                  paymentMethod === "revolut" ? "border-flame bg-flame/5 text-flame" : "border-hairline text-paper-dim hover:border-steel"
+                }`}
+                title={t('checkout.revolutTitle')}
+              >
+                <CreditCard className="w-4 h-4" /> Revolut
+              </button>
+              <button
+                type="button"
                 onClick={() => setPaymentMethod("bitcoin")}
                 className={`flex items-center gap-2.5 justify-center border rounded-sm py-4 transition-colors ${
                   paymentMethod === "bitcoin" ? "border-flame bg-flame/5 text-flame" : "border-hairline text-paper-dim hover:border-steel"
@@ -571,6 +587,11 @@ export default function CheckoutPage() {
             {paymentMethod === "sepa" && (
               <p className="text-xs text-paper-dim mt-3">
                 💶 {t('checkout.sepaDescription')}
+              </p>
+            )}
+            {paymentMethod === "revolut" && (
+              <p className="text-xs text-paper-dim mt-3">
+                🔵 {t('checkout.revolutDescription')}
               </p>
             )}
           </section>
@@ -683,6 +704,8 @@ export default function CheckoutPage() {
                   ? t('checkout.continueToBitcoin')
                   : paymentMethod === "sepa"
                   ? t('checkout.continueToSepa')
+                  : paymentMethod === "revolut"
+                  ? t('checkout.continueToRevolut')
                   : t('checkout.continueToPayment')}
               </Button>
 

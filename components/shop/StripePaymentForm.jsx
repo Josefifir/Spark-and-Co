@@ -82,6 +82,9 @@ export default function StripePaymentForm({ clientSecret, orderNumber, onSuccess
     ...(paymentMethod === "sepa" && {
       paymentMethodOrder: ["sepa_debit"],
     }),
+    ...(paymentMethod === "revolut" && {
+      paymentMethodOrder: ["revolut_pay"],
+    }),
   };
 
   return (

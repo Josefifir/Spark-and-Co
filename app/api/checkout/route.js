@@ -43,7 +43,7 @@ const CheckoutSchema = z.object({
   ageVerified: z.literal(true, {
     errorMap: () => ({ message: "Age verification is required to purchase." }),
   }),
-  paymentMethod: z.enum(["stripe", "bitcoin", "sepa"]),
+  paymentMethod: z.enum(["stripe", "bitcoin", "sepa", "revolut"]),
   discountCode: z.string().max(20).optional(),
 });
 
@@ -171,8 +171,8 @@ export async function POST(request) {
     eur: 50,  // €0.50
   };
 
-  // Validate minimum charge amount for Stripe/SEPA payments
-  if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa") {
+  // Validate minimum charge amount for Stripe/SEPA/Revolut payments
+  if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa" || body.paymentMethod === "revolut") {
     const minAmount = STRIPE_MINIMUMS[currencyConfig.stripeCode] || 50;
     if (finalTotalCents < minAmount) {
       console.log('VALIDATION FAILED: finalTotalCents =', finalTotalCents, '< minAmount =', minAmount);
@@ -232,11 +232,12 @@ export async function POST(request) {
   await Product.bulkWrite(stockUpdates);
 
   try {
-    if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa") {
+    if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa" || body.paymentMethod === "revolut") {
       // Configure payment method types based on selection
-      const paymentMethodTypes = body.paymentMethod === "sepa"
-        ? ["sepa_debit"]
-        : ["card"];
+      const paymentMethodTypes =
+        body.paymentMethod === "sepa"    ? ["sepa_debit"] :
+        body.paymentMethod === "revolut" ? ["revolut_pay"] :
+        ["card"];
 
       // Debug logging
       console.log('Checkout Debug:', {
@@ -261,8 +262,6 @@ export async function POST(request) {
           orderCurrency: orderCurrency,
           paymentType: body.paymentMethod,
         },
-        // For SEPA, mandate acceptance is handled by Stripe Elements on the client side
-        // No need to pass mandate_data here without confirm: true
       });
 
       order.stripePaymentIntentId = paymentIntent.id;
