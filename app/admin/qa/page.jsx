@@ -15,8 +15,12 @@ export default function AdminQAPage() {
   const load = () => {
     setLoading(true);
     fetch(`/api/admin/qa?filter=${filter}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) throw new Error(`Server error ${r.status}`);
+        return r.json();
+      })
       .then((d) => setQuestions(d.questions || []))
+      .catch((err) => { console.error("Failed to load Q&A:", err); toast.error("Failed to load questions"); setQuestions([]); })
       .finally(() => setLoading(false));
   };
 
