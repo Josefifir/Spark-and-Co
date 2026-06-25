@@ -1,6 +1,6 @@
 "use client";
 
-import { Star } from "lucide-react";
+import { Star, ShieldCheck } from "lucide-react";
 
 function StarRating({ rating }) {
   return (
@@ -74,9 +74,14 @@ export default function ReviewList({ reviews, averageRating, reviewCount }) {
 
             <p className="text-paper-dim mb-3">{review.text}</p>
 
-            <p className="text-xs text-steel">
-              <span className="font-mono-tech">{review.customerName}</span>
-            </p>
+            <div className="flex items-center gap-3">
+              <span className="font-mono-tech text-xs text-steel">{review.customerName}</span>
+              {review.orderNumber && (
+                <span className="flex items-center gap-1 text-xs text-success">
+                  <ShieldCheck className="w-3 h-3" /> Verified Purchase
+                </span>
+              )}
+            </div>
           </div>
         ))}
       </div>

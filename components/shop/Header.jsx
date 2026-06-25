@@ -7,6 +7,7 @@ import { useLocale } from "@/lib/i18n/LocaleContext";
 import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
 import CurrencySwitcher from "@/components/shop/CurrencySwitcher";
 import LanguageSwitcher from "@/components/shop/LanguageSwitcher";
+import SearchBar from "@/components/shop/SearchBar";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
@@ -53,8 +54,9 @@ export default function Header() {
 
           {/* Right-side actions */}
           <div className="flex items-center gap-1.5 sm:gap-2">
-            {/* Desktop-only switchers */}
+            {/* Desktop-only switchers + search */}
             <div className="hidden sm:flex items-center gap-2">
+              <SearchBar />
               <LanguageSwitcher />
               <CurrencySwitcher />
             </div>

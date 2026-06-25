@@ -21,6 +21,8 @@ const ProductSchema = z.object({
     minQuantity: z.number().int().min(2),
     discountPercent: z.number().min(0).max(100)
   })).optional().default([]),
+  salePriceCents: z.number().int().min(0).nullable().optional(),
+  saleEndsAt: z.string().datetime().nullable().optional(),
 });
 
 export const GET = requireAdmin(async () => {

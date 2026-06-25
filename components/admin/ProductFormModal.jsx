@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { X, Plus, Trash2 } from "lucide-react";
+import { X, Plus, Trash2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
@@ -23,9 +23,13 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     isActive: product?.isActive ?? true,
     featured: product?.featured ?? false,
     bulkPricingTiers: product?.bulkPricingTiers || [],
+    salePrice: product?.salePriceCents ? (product.salePriceCents / 100).toFixed(2) : "",
+    saleEndsAt: product?.saleEndsAt ? new Date(product.saleEndsAt).toISOString().slice(0, 16) : "",
+    lowStockThreshold: product?.lowStockThreshold ?? "",
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [generatingDesc, setGeneratingDesc] = useState(false);
 
   useEffect(() => {
     fetch("/api/admin/categories")
@@ -67,6 +71,28 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     }));
   };
 
+  const handleGenerateDescription = async () => {
+    if (!form.name || !form.category) return;
+    setGeneratingDesc(true);
+    try {
+      const res = await fetch("/api/admin/products/generate-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.name, category: form.category }),
+      });
+      const data = await res.json();
+      if (res.ok && data.description) {
+        setForm((f) => ({ ...f, description: data.description }));
+      } else {
+        toast.error(data.error || "Failed to generate description");
+      }
+    } catch {
+      toast.error("Failed to generate description");
+    } finally {
+      setGeneratingDesc(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -83,6 +109,9 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
       isActive: form.isActive,
       featured: form.featured,
       bulkPricingTiers: form.bulkPricingTiers,
+      salePriceCents: form.salePrice ? Math.round(parseFloat(form.salePrice) * 100) : null,
+      saleEndsAt: form.saleEndsAt ? new Date(form.saleEndsAt).toISOString() : null,
+      lowStockThreshold: form.lowStockThreshold !== "" ? parseInt(form.lowStockThreshold, 10) : null,
     };
 
     try {
@@ -129,9 +158,20 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
           <Input label="Name" value={form.name} onChange={update("name")} required />
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs uppercase tracking-wider text-paper-dim font-mono-tech">
-              Description
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="text-xs uppercase tracking-wider text-paper-dim font-mono-tech">
+                Description
+              </label>
+              <button
+                type="button"
+                onClick={handleGenerateDescription}
+                disabled={generatingDesc || !form.name || !form.category}
+                className="flex items-center gap-1 text-xs text-flame hover:text-flame-bright disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              >
+                <Sparkles className="w-3 h-3" />
+                {generatingDesc ? "Generating…" : "Generate with AI"}
+              </button>
+            </div>
             <textarea
               value={form.description}
               onChange={update("description")}
@@ -191,6 +231,43 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
               Featured
             </label>
           </div>
+
+          {/* Flash Sale Section */}
+          <div className="border border-hairline rounded-sm p-4 space-y-3">
+            <label className="text-xs uppercase tracking-wider text-paper-dim font-mono-tech">
+              Flash Sale (Optional)
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <Input
+                label="Sale Price (USD)"
+                type="number"
+                step="0.01"
+                min="0"
+                value={form.salePrice}
+                onChange={update("salePrice")}
+                placeholder="Leave blank to disable"
+              />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs uppercase tracking-wider text-paper-dim font-mono-tech">Sale Ends At</label>
+                <input
+                  type="datetime-local"
+                  value={form.saleEndsAt}
+                  onChange={update("saleEndsAt")}
+                  className="bg-graphite border border-hairline rounded-sm px-3.5 py-2.5 text-paper focus:border-flame transition-colors text-sm"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Low Stock Threshold */}
+          <Input
+            label="Low Stock Alert Threshold"
+            type="number"
+            min="0"
+            value={form.lowStockThreshold}
+            onChange={update("lowStockThreshold")}
+            placeholder="e.g. 5 — email sent when stock drops to this"
+          />
 
           {/* Bulk Pricing Section */}
           <div className="border border-hairline rounded-sm p-4 space-y-3">

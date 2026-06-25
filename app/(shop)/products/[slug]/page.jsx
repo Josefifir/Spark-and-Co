@@ -3,6 +3,7 @@ import Product from "@/lib/models/Product";
 import ProductReview from "@/lib/models/ProductReview";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "@/components/shop/ProductDetailClient";
+import ProductQA from "@/components/shop/ProductQA";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,7 @@ async function getProduct(slug) {
     product: product._id,
     status: "approved",
   })
-    .select("rating title text customerName createdAt")
+    .select("rating title text customerName orderNumber createdAt")
     .sort({ createdAt: -1 })
     .lean()
     .limit(10);
@@ -60,11 +61,16 @@ export default async function ProductDetailPage({ params, searchParams }) {
   const reviewToken = await searchParams.then(params => params.reviewToken);
 
   return (
-    <ProductDetailClient
-      product={data.product}
-      relatedProducts={data.relatedProducts}
-      reviews={data.reviews}
-      reviewToken={reviewToken}
-    />
+    <>
+      <ProductDetailClient
+        product={data.product}
+        relatedProducts={data.relatedProducts}
+        reviews={data.reviews}
+        reviewToken={reviewToken}
+      />
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pb-16">
+        <ProductQA slug={data.product.slug} />
+      </div>
+    </>
   );
 }

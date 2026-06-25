@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 const NAV = [
@@ -13,6 +13,10 @@ const NAV = [
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquare },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/shipping", label: "Shipping Zones", icon: Truck },
+  { href: "/admin/qa", label: "Q&A", icon: HelpCircle },
+  { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/gift-cards", label: "Gift Cards", icon: Gift },
+  { href: "/admin/returns", label: "Returns", icon: RotateCcw },
 ];
 
 export default function AdminLayout({ children }) {

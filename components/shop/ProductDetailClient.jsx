@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Flame, Minus, Plus, ShieldCheck, Lock } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
@@ -11,12 +11,22 @@ import { toast } from "sonner";
 import ProductCard from "@/components/shop/ProductCard";
 import ReviewList from "@/components/shop/ReviewList";
 import ReviewForm from "@/components/shop/ReviewForm";
+import TrustBadges from "@/components/shop/TrustBadges";
+import FlashSaleBadge from "@/components/shop/FlashSaleBadge";
 
 export default function ProductDetailClient({ product, relatedProducts = [], reviews = [], reviewToken = null }) {
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
   const { t } = useLocale();
   const [quantity, setQuantity] = useState(1);
+  const [soldToday, setSoldToday] = useState(0);
+
+  useEffect(() => {
+    fetch(`/api/products/${product.slug}/sold-today`)
+      .then((r) => r.json())
+      .then((d) => setSoldToday(d.count || 0))
+      .catch(() => {});
+  }, [product.slug]);
 
   const handleAdd = () => {
     addItem(product, quantity);
@@ -52,11 +62,32 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
           </h1>
           <p className="text-paper-dim leading-relaxed mb-6">{product.description}</p>
 
+          {product.salePriceCents && product.saleEndsAt && new Date(product.saleEndsAt) > new Date() ? (
+            <FlashSaleBadge
+              salePriceCents={product.salePriceCents}
+              saleEndsAt={product.saleEndsAt}
+              originalPriceCents={product.priceCents}
+              formatPrice={formatPrice}
+            />
+          ) : null}
+
           <div className="flex items-center justify-between border-y border-hairline py-4 mb-6">
             <span className="font-mono-tech text-2xl text-flame font-medium">
-              {formatPrice(product.priceCents, 'USD')}
+              {formatPrice(
+                product.salePriceCents && product.saleEndsAt && new Date(product.saleEndsAt) > new Date()
+                  ? product.salePriceCents
+                  : product.priceCents,
+                'USD'
+              )}
             </span>
-            <span className="text-xs font-mono-tech text-steel">SKU {product.sku}</span>
+            <div className="text-right">
+              <span className="text-xs font-mono-tech text-steel block">SKU {product.sku}</span>
+              {soldToday > 0 && (
+                <span className="text-xs text-success mt-0.5 block">
+                  🔥 {soldToday} sold today
+                </span>
+              )}
+            </div>
           </div>
 
           {product.stock > 0 ? (
@@ -95,14 +126,7 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
             </Button>
           )}
 
-          <div className="mt-8 space-y-3">
-            <div className="flex items-center gap-2.5 text-sm text-paper-dim">
-              <Lock className="w-4 h-4 text-flame" /> {t('product.encryptedCheckout')}
-            </div>
-            <div className="flex items-center gap-2.5 text-sm text-paper-dim">
-              <ShieldCheck className="w-4 h-4 text-flame" /> {t('product.ageRestriction')}
-            </div>
-          </div>
+          <TrustBadges className="mt-8" />
         </div>
       </div>
 

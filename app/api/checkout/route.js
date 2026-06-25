@@ -10,6 +10,7 @@ import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { validateDiscountCode, incrementDiscountCodeUsage, calculateBulkPrice } from "@/lib/utils-pricing";
 import { getCurrencyForCountry, convertPrice, getCurrencyConfig, formatPrice } from "@/lib/utils-currency";
 import { getCustomerSession } from "@/lib/auth/customerSession";
+import { sendLowStockAlert } from "@/lib/email/resend";
 
 const CheckoutSchema = z.object({
   items: z
@@ -231,6 +232,19 @@ export async function POST(request) {
   
   await Product.bulkWrite(stockUpdates);
 
+  // Fire low-stock alerts (best-effort, non-blocking)
+  for (const item of orderItems) {
+    const updatedProduct = await Product.findById(item.product).select("name sku stock lowStockThreshold").lean();
+    if (
+      updatedProduct &&
+      updatedProduct.lowStockThreshold !== null &&
+      updatedProduct.lowStockThreshold !== undefined &&
+      updatedProduct.stock <= updatedProduct.lowStockThreshold
+    ) {
+      sendLowStockAlert(updatedProduct).catch(() => {});
+    }
+  }
+
   try {
     if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa" || body.paymentMethod === "revolut") {
       // Configure payment method types based on selection
@@ -269,7 +283,7 @@ export async function POST(request) {
 
       // Increment discount code usage after successful payment setup
       if (discountCodeUsed) {
-        await incrementDiscountCodeUsage(discountCodeUsed);
+        await incrementDiscountCodeUsage(discountCodeUsed, finalDiscountCents);
       }
 
       return NextResponse.json({
@@ -298,7 +312,7 @@ export async function POST(request) {
 
       // Increment discount code usage after successful payment setup
       if (discountCodeUsed) {
-        await incrementDiscountCodeUsage(discountCodeUsed);
+        await incrementDiscountCodeUsage(discountCodeUsed, finalDiscountCents);
       }
 
       return NextResponse.json({

@@ -7,6 +7,7 @@ import { useCurrency } from "@/lib/currency/CurrencyContext";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import { calculateBulkPrice } from "@/lib/utils-pricing-client";
 import Button from "@/components/ui/Button";
+import CartUpsell from "@/components/shop/CartUpsell";
 import { useEffect, useState } from "react";
 
 export default function CartPage() {
@@ -205,6 +206,8 @@ export default function CartPage() {
           </div>
         ))}
       </div>
+
+      <CartUpsell cartItems={items} />
 
       <div className="flex justify-end">
         <div className="w-full sm:w-80">
