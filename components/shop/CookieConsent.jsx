@@ -230,24 +230,34 @@ export default function CookieConsent() {
 
   return (
     <div className="fixed bottom-0 left-0 right-0 z-50 bg-panel border-t border-hairline shadow-2xl">
-      <div className="max-w-7xl mx-auto p-6">
-        <div className="flex items-start gap-4">
-          <Cookie className="w-6 h-6 text-flame shrink-0 mt-1" />
-          
-          <div className="flex-1">
-            <h2 className="font-display text-lg font-bold text-paper mb-2">
-              We value your privacy
-            </h2>
-            <p className="text-sm text-paper-dim mb-4">
-              We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic.
-              By clicking "Accept All", you consent to our use of cookies. You can customize your preferences or learn more in our{" "}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        {/* Close button — top-right on mobile */}
+        <div className="flex items-start gap-3">
+          <Cookie className="w-5 h-5 text-flame shrink-0 mt-0.5 hidden sm:block" />
+
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2 mb-1.5">
+              <h2 className="font-display text-base sm:text-lg font-bold text-paper">
+                We value your privacy
+              </h2>
+              <button
+                onClick={acceptNecessary}
+                className="text-paper-dim hover:text-paper transition-colors shrink-0"
+                aria-label="Close and accept necessary cookies only"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs sm:text-sm text-paper-dim mb-3 leading-relaxed">
+              We use cookies to improve your experience and analyze traffic. See our{" "}
               <a href="/legal/privacy" className="text-flame hover:underline">
                 Privacy Policy
               </a>
               .
             </p>
-            
-            <div className="flex flex-wrap gap-3">
+
+            <div className="flex flex-wrap gap-2">
               <Button onClick={acceptAll} size="sm">
                 Accept All
               </Button>
@@ -255,18 +265,10 @@ export default function CookieConsent() {
                 Necessary Only
               </Button>
               <Button onClick={() => setShowSettings(true)} variant="secondary" size="sm">
-                <Settings className="w-4 h-4" /> Customize
+                <Settings className="w-3.5 h-3.5" /> Customize
               </Button>
             </div>
           </div>
-
-          <button
-            onClick={acceptNecessary}
-            className="text-paper-dim hover:text-paper transition-colors shrink-0"
-            aria-label="Close and accept necessary cookies only"
-          >
-            <X className="w-5 h-5" />
-          </button>
         </div>
       </div>
     </div>

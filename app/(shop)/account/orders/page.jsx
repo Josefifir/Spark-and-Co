@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Package, ChevronRight } from "lucide-react";
+import { Package } from "lucide-react";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
@@ -31,74 +31,70 @@ export default function OrdersPage() {
   }
 
   function formatPrice(cents, currency = "usd") {
-    const amount = cents / 100;
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
-    }).format(amount);
+    }).format(cents / 100);
   }
 
-  function getStatusColor(status) {
-    const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      paid: "bg-green-100 text-green-800",
-      failed: "bg-red-100 text-red-800",
-      refunded: "bg-gray-100 text-gray-800",
-      expired: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
+  // Design-system status badges using the project's colour tokens
+  function PaymentBadge({ status }) {
+    const map = {
+      paid:      "bg-flame/10 text-flame border border-flame/30",
+      pending:   "bg-steel/10 text-paper-dim border border-hairline",
+      failed:    "bg-danger/10 text-danger border border-danger/30",
+      refunded:  "bg-steel/10 text-paper-dim border border-hairline",
+      expired:   "bg-steel/10 text-paper-dim border border-hairline",
+      cancelled: "bg-danger/10 text-danger border border-danger/30",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] font-mono-tech uppercase tracking-wider ${map[status] || "bg-steel/10 text-paper-dim border border-hairline"}`}>
+        {status}
+      </span>
+    );
   }
 
-  function getFulfillmentColor(status) {
-    const colors = {
-      unfulfilled: "bg-gray-100 text-gray-800",
-      processing: "bg-blue-100 text-blue-800",
-      shipped: "bg-purple-100 text-purple-800",
-      delivered: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
+  function FulfillmentBadge({ status }) {
+    const map = {
+      unfulfilled: "bg-steel/10 text-paper-dim border border-hairline",
+      processing:  "bg-flame/5 text-flame border border-flame/20",
+      shipped:     "bg-flame/10 text-flame border border-flame/30",
+      delivered:   "bg-flame/20 text-flame border border-flame/40",
+      cancelled:   "bg-danger/10 text-danger border border-danger/30",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return (
+      <span className={`inline-flex items-center px-2 py-0.5 rounded-sm text-[10px] font-mono-tech uppercase tracking-wider ${map[status] || "bg-steel/10 text-paper-dim border border-hairline"}`}>
+        {status}
+      </span>
+    );
   }
 
   if (loading) {
     return (
-      <div className="bg-panel rounded-lg border border-hairline p-6">
+      <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-panel-raised rounded w-1/4"></div>
-          <div className="h-20 bg-panel-raised rounded"></div>
-          <div className="h-20 bg-panel-raised rounded"></div>
-          <div className="h-20 bg-panel-raised rounded"></div>
+          <div className="h-4 bg-panel-raised rounded w-1/4" />
+          <div className="h-20 bg-panel-raised rounded" />
+          <div className="h-20 bg-panel-raised rounded" />
+          <div className="h-20 bg-panel-raised rounded" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-panel rounded-lg border border-hairline p-6">
-      <h2 className="text-2xl font-bold text-paper mb-6">Order History</h2>
+    <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+      <h2 className="font-display text-xl sm:text-2xl font-bold text-paper mb-6">Order History</h2>
 
       {orders.length === 0 ? (
         <div className="text-center py-12">
-          <svg
-            className="mx-auto h-12 w-12 text-steel"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"
-            />
-          </svg>
-          <h3 className="mt-2 text-sm font-medium text-paper">No orders yet</h3>
+          <Package className="mx-auto h-10 w-10 text-steel/40" />
+          <h3 className="mt-4 text-sm font-medium text-paper">No orders yet</h3>
           <p className="mt-1 text-sm text-paper-dim">Start shopping to see your orders here.</p>
           <div className="mt-6">
             <Link
               href="/products"
-              className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+              className="inline-flex items-center px-5 py-2.5 bg-flame text-graphite font-semibold rounded-sm hover:bg-flame-bright transition-colors text-sm"
             >
               Browse Products
             </Link>
@@ -106,21 +102,22 @@ export default function OrdersPage() {
         </div>
       ) : (
         <>
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {orders.map((order) => (
               <div
                 key={order._id}
-                className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                className="border border-hairline rounded-sm p-3 sm:p-4 hover:border-steel transition-colors"
               >
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
+                {/* Top row: order number + date */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-4 mb-3">
                   <div>
                     <Link
                       href={`/account/orders/${order.orderNumber}`}
-                      className="text-lg font-semibold text-blue-600 hover:text-blue-800"
+                      className="font-display font-semibold text-paper hover:text-flame transition-colors"
                     >
                       Order #{order.orderNumber}
                     </Link>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-xs text-paper-dim mt-0.5">
                       {new Date(order.createdAt).toLocaleDateString("en-US", {
                         year: "numeric",
                         month: "long",
@@ -128,52 +125,38 @@ export default function OrdersPage() {
                       })}
                     </p>
                   </div>
-                  <div className="mt-2 md:mt-0 flex flex-wrap gap-2">
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(
-                        order.paymentStatus
-                      )}`}
-                    >
-                      {order.paymentStatus}
-                    </span>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getFulfillmentColor(
-                        order.fulfillmentStatus
-                      )}`}
-                    >
-                      {order.fulfillmentStatus}
-                    </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    <PaymentBadge status={order.paymentStatus} />
+                    <FulfillmentBadge status={order.fulfillmentStatus} />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                {/* Details row */}
+                <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                   <div>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Items:</span> {order.items.length}
-                    </p>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Total:</span>{" "}
-                      {formatPrice(order.totalCents, order.currency)}
-                    </p>
+                    <span className="text-paper-dim text-xs">Items</span>
+                    <p className="text-paper font-mono-tech">{order.items.length}</p>
                   </div>
                   <div>
-                    <p className="text-gray-600">
-                      <span className="font-medium">Payment:</span>{" "}
-                      {order.paymentMethod}
-                    </p>
-                    {order.trackingNumber && (
-                      <p className="text-gray-600">
-                        <span className="font-medium">Tracking:</span>{" "}
-                        {order.trackingNumber}
-                      </p>
-                    )}
+                    <span className="text-paper-dim text-xs">Total</span>
+                    <p className="text-paper font-mono-tech">{formatPrice(order.totalCents, order.currency)}</p>
                   </div>
+                  <div>
+                    <span className="text-paper-dim text-xs">Payment</span>
+                    <p className="text-paper capitalize text-xs mt-0.5">{order.paymentMethod}</p>
+                  </div>
+                  {order.trackingNumber && (
+                    <div>
+                      <span className="text-paper-dim text-xs">Tracking</span>
+                      <p className="text-paper text-xs mt-0.5 font-mono-tech">{order.trackingNumber}</p>
+                    </div>
+                  )}
                 </div>
 
-                <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="border-t border-hairline pt-3">
                   <Link
                     href={`/account/orders/${order.orderNumber}`}
-                    className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    className="text-xs text-flame hover:text-flame-bright font-medium font-mono-tech"
                   >
                     View Details →
                   </Link>
@@ -184,23 +167,23 @@ export default function OrdersPage() {
 
           {/* Pagination */}
           {pagination && pagination.pages > 1 && (
-            <div className="mt-6 flex justify-center gap-2">
+            <div className="mt-6 flex items-center justify-center gap-3">
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-hairline rounded-sm text-sm text-paper-dim hover:border-steel hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Previous
+                ← Previous
               </button>
-              <span className="px-4 py-2 text-sm text-gray-700">
-                Page {currentPage} of {pagination.pages}
+              <span className="text-xs text-steel font-mono-tech">
+                {currentPage} / {pagination.pages}
               </span>
               <button
                 onClick={() => setCurrentPage((p) => Math.min(pagination.pages, p + 1))}
                 disabled={currentPage === pagination.pages}
-                className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 border border-hairline rounded-sm text-sm text-paper-dim hover:border-steel hover:text-paper transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Next
+                Next →
               </button>
             </div>
           )}

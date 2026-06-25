@@ -101,8 +101,8 @@ export default function CartPage() {
   }, 0);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-16">
-      <h1 className="font-display text-3xl font-bold text-paper mb-10">{t('cart.title')}</h1>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <h1 className="font-display text-2xl sm:text-3xl font-bold text-paper mb-6 sm:mb-10">{t('cart.title')}</h1>
 
       {totalSavings > 0 && (
         <div className="bg-flame/10 border border-flame/30 rounded-sm p-4 mb-6 flex items-center gap-3">
@@ -118,8 +118,9 @@ export default function CartPage() {
 
       <div className="border border-hairline rounded-sm divide-y divide-hairline mb-8">
         {itemsWithBulkPricing.map((item) => (
-          <div key={item.productId} className="flex items-center gap-4 p-4">
-            <div className="w-16 h-16 bg-panel-raised rounded-sm flex items-center justify-center shrink-0 overflow-hidden">
+          <div key={item.productId} className="flex items-start sm:items-center gap-3 sm:gap-4 p-3 sm:p-4">
+            {/* Thumbnail */}
+            <div className="w-14 h-14 sm:w-16 sm:h-16 bg-panel-raised rounded-sm flex items-center justify-center shrink-0 overflow-hidden">
               {item.image ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
@@ -128,12 +129,13 @@ export default function CartPage() {
               )}
             </div>
 
+            {/* Name + price — grows to fill space */}
             <div className="flex-1 min-w-0">
-              <Link href={`/products/${item.slug}`} className="font-medium text-paper hover:text-flame transition-colors block truncate">
+              <Link href={`/products/${item.slug}`} className="font-medium text-paper hover:text-flame transition-colors block truncate text-sm sm:text-base">
                 {item.name}
               </Link>
-              <div className="flex items-center gap-2">
-                <span className="font-mono-tech text-sm text-paper-dim">
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-mono-tech text-xs sm:text-sm text-paper-dim">
                   {formatPrice(item.bulkPrice?.unitPriceCents || item.priceCents, 'USD')}
                 </span>
                 {item.bulkPrice?.bulkApplied && (
@@ -142,9 +144,34 @@ export default function CartPage() {
                   </span>
                 )}
               </div>
+
+              {/* On mobile: quantity stepper sits below the name */}
+              <div className="flex items-center gap-2 mt-2 sm:hidden">
+                <div className="flex items-center border border-hairline rounded-sm">
+                  <button
+                    onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                    className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                    aria-label={t('cart.decreaseQuantity')}
+                  >
+                    <Minus className="w-3 h-3" />
+                  </button>
+                  <span className="w-8 text-center font-mono-tech text-sm text-paper">{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                    className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                    aria-label={t('cart.increaseQuantity')}
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
+                </div>
+                <span className="font-mono-tech text-sm text-paper ml-auto">
+                  {formatPrice(item.bulkPrice?.totalPriceCents || (item.priceCents * item.quantity), 'USD')}
+                </span>
+              </div>
             </div>
 
-            <div className="flex items-center border border-hairline rounded-sm">
+            {/* Desktop: quantity stepper */}
+            <div className="hidden sm:flex items-center border border-hairline rounded-sm">
               <button
                 onClick={() => updateQuantity(item.productId, item.quantity - 1)}
                 className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
@@ -152,9 +179,7 @@ export default function CartPage() {
               >
                 <Minus className="w-3 h-3" />
               </button>
-              <span className="w-8 text-center font-mono-tech text-sm text-paper">
-                {item.quantity}
-              </span>
+              <span className="w-8 text-center font-mono-tech text-sm text-paper">{item.quantity}</span>
               <button
                 onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                 className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
@@ -164,13 +189,15 @@ export default function CartPage() {
               </button>
             </div>
 
-            <span className="font-mono-tech text-paper w-20 text-right">
+            {/* Desktop: line total */}
+            <span className="hidden sm:block font-mono-tech text-paper w-20 text-right">
               {formatPrice(item.bulkPrice?.totalPriceCents || (item.priceCents * item.quantity), 'USD')}
             </span>
 
+            {/* Remove */}
             <button
               onClick={() => removeItem(item.productId)}
-              className="text-steel hover:text-danger transition-colors"
+              className="text-steel hover:text-danger transition-colors shrink-0"
               aria-label={t('cart.removeItem', { name: item.name })}
             >
               <X className="w-4 h-4" />

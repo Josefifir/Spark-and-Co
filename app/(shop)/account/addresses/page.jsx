@@ -161,13 +161,13 @@ export default function AddressesPage() {
   }
 
   return (
-    <div className="bg-panel rounded-lg border border-hairline p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-paper">Saved Addresses</h2>
+    <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
+        <h2 className="font-display text-xl sm:text-2xl font-bold text-paper">Saved Addresses</h2>
         {!showForm && (
           <button
             onClick={() => setShowForm(true)}
-            className="px-4 py-2 bg-flame text-graphite font-medium rounded-md hover:bg-flame-bright transition-colors"
+            className="w-full sm:w-auto px-4 py-2.5 bg-flame text-graphite font-semibold rounded-sm hover:bg-flame-bright transition-colors text-sm"
           >
             Add New Address
           </button>
@@ -176,10 +176,10 @@ export default function AddressesPage() {
 
       {message.text && (
         <div
-          className={`mb-6 p-4 rounded-md ${
+          className={`mb-6 p-4 rounded-sm text-sm ${
             message.type === "success"
-              ? "bg-green-900/20 text-green-400 border border-green-800"
-              : "bg-red-900/20 text-red-400 border border-red-800"
+              ? "bg-flame/10 text-flame border border-flame/30"
+              : "bg-danger/10 text-danger border border-danger/30"
           }`}
         >
           {message.text}
@@ -187,8 +187,8 @@ export default function AddressesPage() {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="mb-8 p-6 bg-panel-raised rounded-lg border border-hairline">
-          <h3 className="text-lg font-semibold text-paper mb-4">
+        <form onSubmit={handleSubmit} className="mb-8 p-4 sm:p-6 bg-panel-raised rounded-sm border border-hairline">
+          <h3 className="font-display text-base sm:text-lg font-semibold text-paper mb-4">
             {editingId ? "Edit Address" : "Add New Address"}
           </h3>
           <div className="space-y-4">
@@ -327,46 +327,46 @@ export default function AddressesPage() {
           <p className="mt-1 text-sm text-paper-dim">Add an address for faster checkout.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           {addresses.map((address) => (
             <div
               key={address._id}
-              className={`border rounded-lg p-4 ${
-                address.isDefault ? "border-flame bg-flame/10" : "border-hairline bg-panel-raised"
+              className={`border rounded-sm p-4 ${
+                address.isDefault ? "border-flame bg-flame/5" : "border-hairline bg-panel-raised"
               }`}
             >
               {address.isDefault && (
-                <span className="inline-block px-2 py-1 text-xs font-medium text-flame bg-flame/20 rounded mb-2">
+                <span className="inline-block px-2 py-0.5 text-[10px] font-mono-tech uppercase tracking-wider text-flame bg-flame/10 border border-flame/30 rounded-sm mb-2">
                   Default
                 </span>
               )}
-              <div className="text-sm space-y-1">
+              <div className="text-sm space-y-0.5">
                 <p className="font-medium text-paper">{address.name}</p>
-                <p className="text-paper-dim">{address.line1}</p>
-                {address.line2 && <p className="text-paper-dim">{address.line2}</p>}
-                <p className="text-paper-dim">
+                <p className="text-paper-dim text-xs">{address.line1}</p>
+                {address.line2 && <p className="text-paper-dim text-xs">{address.line2}</p>}
+                <p className="text-paper-dim text-xs">
                   {address.city}, {address.state} {address.postalCode}
                 </p>
-                <p className="text-paper-dim">{address.country}</p>
+                <p className="text-paper-dim text-xs">{address.country}</p>
               </div>
-              <div className="mt-4 flex gap-2">
+              <div className="mt-4 flex flex-wrap gap-3">
                 <button
                   onClick={() => handleEdit(address)}
-                  className="text-sm text-flame hover:text-flame-bright font-medium"
+                  className="text-xs text-flame hover:text-flame-bright font-medium font-mono-tech"
                 >
                   Edit
                 </button>
                 {!address.isDefault && (
                   <button
                     onClick={() => handleSetDefault(address._id)}
-                    className="text-sm text-paper-dim hover:text-paper font-medium"
+                    className="text-xs text-paper-dim hover:text-paper font-medium font-mono-tech"
                   >
                     Set as Default
                   </button>
                 )}
                 <button
                   onClick={() => handleDelete(address._id)}
-                  className="text-sm text-red-500 hover:text-red-400 font-medium"
+                  className="text-xs text-danger hover:text-danger/80 font-medium font-mono-tech"
                 >
                   Delete
                 </button>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { Flame, Minus, Plus, ShieldCheck, Lock } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import { useCurrency } from "@/lib/currency/CurrencyContext";
@@ -23,13 +24,19 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-16">
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
         {/* Image */}
-        <div className="aspect-square bg-panel border border-hairline rounded-sm flex items-center justify-center overflow-hidden">
+        <div className="aspect-square bg-panel border border-hairline rounded-sm relative flex items-center justify-center overflow-hidden">
           {product.images?.[0] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+              priority
+            />
           ) : (
             <Flame className="w-20 h-20 text-steel/30" />
           )}

@@ -38,36 +38,36 @@ export default function OrderDetailPage() {
     }).format(amount);
   }
 
-  function getStatusColor(status) {
-    const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      paid: "bg-green-100 text-green-800",
-      failed: "bg-red-100 text-red-800",
-      refunded: "bg-gray-100 text-gray-800",
-      expired: "bg-gray-100 text-gray-800",
-      cancelled: "bg-red-100 text-red-800",
+  function paymentBadgeClass(status) {
+    const map = {
+      paid:      "bg-flame/10 text-flame border border-flame/30",
+      pending:   "bg-steel/10 text-paper-dim border border-hairline",
+      failed:    "bg-danger/10 text-danger border border-danger/30",
+      refunded:  "bg-steel/10 text-paper-dim border border-hairline",
+      expired:   "bg-steel/10 text-paper-dim border border-hairline",
+      cancelled: "bg-danger/10 text-danger border border-danger/30",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return map[status] || "bg-steel/10 text-paper-dim border border-hairline";
   }
 
-  function getFulfillmentColor(status) {
-    const colors = {
-      unfulfilled: "bg-gray-100 text-gray-800",
-      processing: "bg-blue-100 text-blue-800",
-      shipped: "bg-purple-100 text-purple-800",
-      delivered: "bg-green-100 text-green-800",
-      cancelled: "bg-red-100 text-red-800",
+  function fulfillmentBadgeClass(status) {
+    const map = {
+      unfulfilled: "bg-steel/10 text-paper-dim border border-hairline",
+      processing:  "bg-flame/5 text-flame border border-flame/20",
+      shipped:     "bg-flame/10 text-flame border border-flame/30",
+      delivered:   "bg-flame/20 text-flame border border-flame/40",
+      cancelled:   "bg-danger/10 text-danger border border-danger/30",
     };
-    return colors[status] || "bg-gray-100 text-gray-800";
+    return map[status] || "bg-steel/10 text-paper-dim border border-hairline";
   }
 
   if (loading) {
     return (
-      <div className="bg-panel rounded-lg border border-hairline p-6">
+      <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-panel-raised rounded w-1/4"></div>
-          <div className="h-20 bg-panel-raised rounded"></div>
-          <div className="h-20 bg-panel-raised rounded"></div>
+          <div className="h-4 bg-panel-raised rounded w-1/4" />
+          <div className="h-20 bg-panel-raised rounded" />
+          <div className="h-20 bg-panel-raised rounded" />
         </div>
       </div>
     );
@@ -75,10 +75,10 @@ export default function OrderDetailPage() {
 
   if (!order) {
     return (
-      <div className="bg-panel rounded-lg border border-hairline p-6">
-        <h2 className="text-2xl font-bold text-paper mb-4">Order Not Found</h2>
+      <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+        <h2 className="font-display text-xl sm:text-2xl font-bold text-paper mb-4">Order Not Found</h2>
         <p className="text-paper-dim mb-4">The order you're looking for doesn't exist.</p>
-        <Link href="/account/orders" className="text-flame hover:text-flame-bright">
+        <Link href="/account/orders" className="text-flame hover:text-flame-bright text-sm">
           ← Back to Orders
         </Link>
       </div>
@@ -86,12 +86,12 @@ export default function OrderDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="bg-panel rounded-lg border border-hairline p-6">
-        <div className="flex items-center justify-between mb-6">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-paper">Order #{order.orderNumber}</h2>
-            <p className="text-sm text-paper-dim mt-1">
+            <h2 className="font-display text-xl sm:text-2xl font-bold text-paper">Order #{order.orderNumber}</h2>
+            <p className="text-xs sm:text-sm text-paper-dim mt-1">
               Placed on {new Date(order.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "long",
@@ -103,25 +103,17 @@ export default function OrderDetailPage() {
           </div>
           <Link
             href="/account/orders"
-            className="text-flame hover:text-flame-bright text-sm font-medium"
+            className="text-flame hover:text-flame-bright text-xs sm:text-sm font-medium font-mono-tech shrink-0"
           >
             ← Back to Orders
           </Link>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
-              order.paymentStatus
-            )}`}
-          >
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] font-mono-tech uppercase tracking-wider ${paymentBadgeClass(order.paymentStatus)}`}>
             Payment: {order.paymentStatus}
           </span>
-          <span
-            className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getFulfillmentColor(
-              order.fulfillmentStatus
-            )}`}
-          >
+          <span className={`inline-flex items-center px-2.5 py-1 rounded-sm text-[10px] font-mono-tech uppercase tracking-wider ${fulfillmentBadgeClass(order.fulfillmentStatus)}`}>
             Fulfillment: {order.fulfillmentStatus}
           </span>
         </div>
@@ -201,8 +193,8 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Shipping Information */}
-      <div className="bg-panel rounded-lg border border-hairline p-6">
-        <h3 className="text-lg font-semibold text-paper mb-4">Shipping Information</h3>
+      <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+        <h3 className="font-display text-base sm:text-lg font-semibold text-paper mb-4">Shipping Information</h3>
         <div className="text-sm text-paper-dim space-y-1">
           <p className="font-medium text-paper">{order.shippingAddress.name}</p>
           <p>{order.shippingAddress.line1}</p>
@@ -221,8 +213,8 @@ export default function OrderDetailPage() {
       </div>
 
       {/* Payment Information */}
-      <div className="bg-panel rounded-lg border border-hairline p-6">
-        <h3 className="text-lg font-semibold text-paper mb-4">Payment Information</h3>
+      <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+        <h3 className="font-display text-base sm:text-lg font-semibold text-paper mb-4">Payment Information</h3>
         <div className="text-sm text-paper-dim space-y-2">
           <div className="flex justify-between">
             <span>Payment Method</span>

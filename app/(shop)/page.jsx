@@ -2,8 +2,8 @@ import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product";
 import HomePageClient from "@/components/shop/HomePageClient";
 
-// Always fetch live stock/pricing rather than serving a stale, build-time snapshot.
-export const dynamic = "force-dynamic";
+// Revalidate every 60 s so stock/pricing stays fresh without a cold DB hit on every request.
+export const revalidate = 60;
 
 async function getFeatured() {
   await dbConnect();

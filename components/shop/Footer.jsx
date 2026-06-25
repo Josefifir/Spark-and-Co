@@ -8,10 +8,10 @@ export default function Footer() {
   const { t } = useLocale();
 
   return (
-    <footer className="border-t border-hairline mt-24">
-      <div className="max-w-6xl mx-auto px-6 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-10">
-          <div>
+    <footer className="border-t border-hairline mt-12 sm:mt-20">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+          <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-flame">🔥</span>
               <span className="font-display font-bold text-paper">STRIKE & CO.</span>
@@ -56,7 +56,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-6 border-t border-hairline">
+        <div className="mt-8 sm:mt-12 pt-6 border-t border-hairline">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mb-4">
             <p className="text-xs text-steel">© {new Date().getFullYear()} Strike & Co. {t('footer.allRightsReserved')}</p>
             <Link href="/admin/login" className="text-xs text-steel hover:text-paper-dim transition-colors">

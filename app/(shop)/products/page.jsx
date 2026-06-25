@@ -3,7 +3,8 @@ import Product from "@/lib/models/Product";
 import Category from "@/lib/models/Categories";
 import ProductsListClient from "@/components/shop/ProductsListClient";
 
-export const dynamic = "force-dynamic";
+// Revalidate every 60 s — category filters are stable enough for short-lived caching.
+export const revalidate = 60;
 
 async function getProducts(category) {
   await dbConnect();

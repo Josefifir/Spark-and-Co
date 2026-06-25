@@ -8,15 +8,15 @@ export default function ProductsListClient({ products, categories, currentCatego
   const { t } = useLocale();
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-16">
-      <div className="mb-10">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
+      <div className="mb-8 sm:mb-10">
         <span className="text-xs font-mono-tech text-flame tracking-wider">{t('products.catalog')}</span>
         <h1 className="font-display text-3xl md:text-4xl font-bold text-paper mt-2">
           {t('products.allLighters')}
         </h1>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-10">
+      <div className="flex flex-wrap gap-2 mb-8 sm:mb-10">
         <Link
           href="/products"
           className={`text-xs font-mono-tech uppercase tracking-wider px-3.5 py-2 rounded-sm border transition-colors ${
