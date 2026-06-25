@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Download } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
 
 const STATUS_COLORS = {
@@ -17,6 +18,25 @@ export default function AdminOrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      const qs  = filter ? `?status=${filter}` : "";
+      const res = await fetch(`/api/admin/orders/export${qs}`);
+      if (!res.ok) { setExporting(false); return; }
+      const blob     = await res.blob();
+      const url      = URL.createObjectURL(blob);
+      const a        = document.createElement("a");
+      a.href         = url;
+      a.download     = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } finally {
+      setExporting(false);
+    }
+  }
 
   useEffect(() => {
     setLoading(true);
@@ -29,7 +49,17 @@ export default function AdminOrdersPage() {
 
   return (
     <div className="p-8 max-w-6xl">
-      <h1 className="font-display text-2xl font-bold text-paper mb-8">Orders</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-display text-2xl font-bold text-paper">Orders</h1>
+        <button
+          onClick={handleExport}
+          disabled={exporting}
+          className="flex items-center gap-1.5 text-xs font-mono-tech uppercase px-3 py-1.5 rounded-sm border border-hairline text-paper-dim hover:border-flame hover:text-flame transition-colors disabled:opacity-50"
+        >
+          <Download className="w-3.5 h-3.5" />
+          {exporting ? "Exporting..." : `Export${filter ? " filtered" : " all"} CSV`}
+        </button>
+      </div>
 
       <div className="flex gap-2 mb-6">
         {["", "pending", "paid", "failed"].map((s) => (

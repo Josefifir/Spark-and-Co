@@ -1,17 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, Pencil, Trash2, Flame } from "lucide-react";
+import { Plus, Pencil, Trash2, Flame, Upload } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
 import Button from "@/components/ui/Button";
 import { toast } from "sonner";
 import ProductFormModal from "@/components/admin/ProductFormModal";
+import CsvImportModal from "@/components/admin/CsvImportModal";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -40,9 +42,14 @@ export default function AdminProductsPage() {
     <div className="p-8 max-w-6xl">
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-display text-2xl font-bold text-paper">Products</h1>
-        <Button onClick={() => { setEditing(null); setModalOpen(true); }}>
-          <Plus className="w-4 h-4" /> Add product
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4" /> Import CSV
+          </Button>
+          <Button onClick={() => { setEditing(null); setModalOpen(true); }}>
+            <Plus className="w-4 h-4" /> Add product
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -121,6 +128,13 @@ export default function AdminProductsPage() {
           product={editing}
           onClose={() => setModalOpen(false)}
           onSaved={() => { setModalOpen(false); load(); }}
+        />
+      )}
+
+      {importOpen && (
+        <CsvImportModal
+          onClose={() => setImportOpen(false)}
+          onImported={() => { load(); }}
         />
       )}
     </div>
