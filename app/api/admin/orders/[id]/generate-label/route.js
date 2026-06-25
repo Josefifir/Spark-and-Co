@@ -108,8 +108,13 @@ export async function POST(request, { params }) {
     }
   } catch (error) {
     console.error("Error generating shipping label:", error);
+    console.error("Error stack:", error.stack);
+    
     return NextResponse.json(
-      { error: error.message || "Failed to generate shipping label" },
+      {
+        error: error.message || "Failed to generate shipping label",
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: error.message === "Unauthorized" ? 401 : 500 }
     );
   }
