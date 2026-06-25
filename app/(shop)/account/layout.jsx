@@ -71,72 +71,56 @@ export default function AccountLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-graphite">
-      {/* Mobile menu button */}
-      <div className="lg:hidden fixed top-4 left-4 z-50">
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="p-2 bg-panel border border-hairline rounded-md text-paper hover:bg-panel-raised transition-colors shadow-lg"
-          aria-label="Toggle menu"
-        >
-          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
-
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Header - Hidden on mobile when menu is open */}
-        <div className={`mb-6 sm:mb-8 ${mobileMenuOpen ? 'hidden lg:block' : 'block'}`}>
-          <h1 className="text-2xl sm:text-3xl font-bold text-paper">My Account</h1>
-          <p className="mt-2 text-sm sm:text-base text-paper-dim">
-            Welcome back, {customer.firstName}!
-          </p>
+
+        {/* Page header row — title + mobile nav toggle inline */}
+        <div className="flex items-center justify-between mb-6 sm:mb-8">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-paper">My Account</h1>
+            <p className="mt-1 text-sm sm:text-base text-paper-dim">
+              Welcome back, {customer.firstName}!
+            </p>
+          </div>
+          {/* Mobile nav toggle — sits in the normal flow, never overlaps header */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="lg:hidden flex items-center justify-center w-9 h-9 border border-hairline rounded-sm text-paper hover:border-steel transition-colors"
+            aria-label="Toggle account menu"
+            aria-expanded={mobileMenuOpen}
+          >
+            {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
+          </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8">
-          {/* Sidebar Navigation - Mobile overlay */}
-          <div className={`
-            lg:col-span-1
-            fixed lg:static inset-0 z-40 lg:z-auto
-            transform transition-transform duration-300 ease-in-out
-            ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          `}>
-            {/* Mobile overlay backdrop */}
-            {mobileMenuOpen && (
-              <div 
-                className="lg:hidden fixed inset-0 bg-graphite/90 backdrop-blur-sm"
-                onClick={() => setMobileMenuOpen(false)}
-              />
-            )}
-            
-            {/* Sidebar content */}
-            <div className="relative lg:static h-full lg:h-auto pt-20 lg:pt-0 px-4 lg:px-0">
-              <nav className="bg-panel rounded-lg border border-hairline p-3 sm:p-4 space-y-1 sm:space-y-2 max-w-sm lg:max-w-none mx-auto">
-                {navItems.map((item) => {
-                  const isActive = item.exact
-                    ? pathname === item.href
-                    : pathname.startsWith(item.href);
-
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`block px-4 py-3 sm:py-2 rounded-md transition-colors text-sm sm:text-base touch-manipulation ${
-                        isActive
-                          ? "bg-flame/10 text-flame font-medium"
-                          : "text-paper-dim hover:bg-panel-raised"
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
-                <button
-                  onClick={handleLogout}
-                  className="w-full text-left px-4 py-3 sm:py-2 rounded-md text-danger hover:bg-danger/10 transition-colors text-sm sm:text-base touch-manipulation"
-                >
-                  Logout
-                </button>
-              </nav>
-            </div>
+          {/* Sidebar — inline on desktop, collapsible on mobile */}
+          <div className={`lg:col-span-1 ${mobileMenuOpen ? 'block' : 'hidden lg:block'}`}>
+            <nav className="bg-panel rounded-sm border border-hairline p-3 sm:p-4 space-y-1">
+              {navItems.map((item) => {
+                const isActive = item.exact
+                  ? pathname === item.href
+                  : pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`block px-4 py-3 rounded-sm transition-colors text-sm touch-manipulation ${
+                      isActive
+                        ? "bg-flame/10 text-flame font-medium"
+                        : "text-paper-dim hover:bg-panel-raised"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
+              <button
+                onClick={handleLogout}
+                className="w-full text-left px-4 py-3 rounded-sm text-danger hover:bg-danger/10 transition-colors text-sm touch-manipulation"
+              >
+                Logout
+              </button>
+            </nav>
           </div>
 
           {/* Main Content */}
