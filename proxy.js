@@ -91,14 +91,16 @@ export function proxy(request) {
         : NextResponse.redirect(new URL("/admin/login", request.url));
     }
 
-    // 3. Login page — accessible with valid access cookie only
-    if (pathname === "/admin/login") {
+    // 3. Login page + login API — accessible with valid access cookie only
+    if (pathname === "/admin/login" || pathname === "/api/admin/login") {
       if (accessOk) {
         const r = NextResponse.next();
         addSecurityHeaders(r);
         return r;
       }
-      return new NextResponse(null, { status: 404 });
+      return isAdminApi
+        ? NextResponse.json({ error: "Not found" }, { status: 404 })
+        : new NextResponse(null, { status: 404 });
     }
 
     // 4. All other admin routes — require access cookie + session cookie
