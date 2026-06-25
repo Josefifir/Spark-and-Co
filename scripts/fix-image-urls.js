@@ -27,12 +27,12 @@ async function fixImageUrls() {
       images: [String],
     }, { strict: false }));
 
-    // Find all products with localhost images
+    // Find all products with absolute image URLs (localhost or any origin)
     const products = await Product.find({
-      images: { $regex: 'localhost' }
+      images: { $regex: '^http' }
     });
 
-    console.log(`\n📦 Found ${products.length} products with localhost image URLs`);
+    console.log(`\n📦 Found ${products.length} products with absolute image URLs`);
 
     if (products.length === 0) {
       console.log('✅ No products need updating!');
@@ -45,13 +45,13 @@ async function fixImageUrls() {
     for (const product of products) {
       const oldImages = [...product.images];
       const newImages = product.images.map(url => {
-        if (url.includes('localhost:3000')) {
-          return url.replace('http://localhost:3000', PRODUCTION_URL);
+        // Strip any absolute origin (localhost or any host) and keep only the path
+        try {
+          const parsed = new URL(url);
+          return parsed.pathname; // e.g. /uploads/products/abc.webp
+        } catch {
+          return url; // already relative — leave it
         }
-        if (url.includes('localhost')) {
-          return url.replace(/http:\/\/localhost:\d+/, PRODUCTION_URL);
-        }
-        return url;
       });
 
       // Only update if images changed
@@ -66,8 +66,7 @@ async function fixImageUrls() {
       }
     }
 
-    console.log(`\n✅ Successfully updated ${updatedCount} products!`);
-    console.log(`📍 All images now point to: ${PRODUCTION_URL}`);
+    console.log(`\n✅ Successfully updated ${updatedCount} products (URLs are now relative paths).`);
 
   } catch (error) {
     console.error('❌ Error:', error);

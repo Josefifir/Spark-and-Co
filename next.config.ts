@@ -9,11 +9,15 @@ const scriptSrc = isDev
   ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com"
   : "script-src 'self' 'unsafe-inline' https://js.stripe.com";
 
+// In dev allow http: images so localhost-served uploads (and any absolute URLs
+// still in the DB) are not blocked. In production only https: is permitted.
+const imgSrc = isDev ? "img-src 'self' data: http: https:" : "img-src 'self' data: https:";
+
 const csp = [
   "default-src 'self'",
   scriptSrc,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: https:",
+  imgSrc,
   "font-src 'self' data:",
   "connect-src 'self' https://api.stripe.com https://api.commerce.coinbase.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
