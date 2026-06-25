@@ -347,7 +347,7 @@ export default function CheckoutPage() {
       <h1 className="font-display text-2xl sm:text-3xl font-bold text-paper mb-6 sm:mb-10">{t('checkout.title')}</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-        <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-8 order-2 lg:order-1">
+        <form onSubmit={handleSubmit} className="lg:col-span-2 space-y-8 order-1">
           <section>
             <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
               {t('checkout.contact')}
@@ -591,8 +591,8 @@ export default function CheckoutPage() {
           </section>
         </form>
 
-        {/* Order summary — appears first on mobile via order-1 */}
-        <div className="order-1 lg:order-2">
+        {/* Order summary — appears below form on mobile, sticky on desktop */}
+        <div className="order-2">
           <div className="border border-hairline rounded-sm p-4 sm:p-5 lg:sticky lg:top-24">
             <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
               {t('checkout.orderSummary')}
