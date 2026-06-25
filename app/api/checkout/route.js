@@ -220,11 +220,16 @@ export async function POST(request) {
       : null,
   });
 
-  // Decrement stock optimistically (reserved). A more advanced version
-  // would use a short-lived hold/expiry; kept simple here.
-  for (const item of orderItems) {
-    await Product.updateOne({ _id: item.product }, { $inc: { stock: -item.quantity } });
-  }
+  // Decrement stock optimistically (reserved) using bulkWrite for better performance
+  // A more advanced version would use a short-lived hold/expiry; kept simple here.
+  const stockUpdates = orderItems.map(item => ({
+    updateOne: {
+      filter: { _id: item.product },
+      update: { $inc: { stock: -item.quantity } }
+    }
+  }));
+  
+  await Product.bulkWrite(stockUpdates);
 
   try {
     if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa") {

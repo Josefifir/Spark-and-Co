@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { Flame, TrendingDown } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
@@ -35,11 +36,13 @@ export default function ProductCard({ product }) {
     >
       <div className="aspect-square bg-panel-raised relative flex items-center justify-center overflow-hidden">
         {product.images?.[0] ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={product.images[0]}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            fill
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            priority={product.featured}
           />
         ) : (
           <Flame className="w-12 h-12 text-steel/40" />
