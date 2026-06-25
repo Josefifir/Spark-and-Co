@@ -2,14 +2,20 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { createDHLShipment, generateDHLTrackingUrl } from "@/lib/carriers/dhl";
-import { createDPDShipment, generateDPDTrackingUrl } from "@/lib/carriers/dpd";
+
+// Mark this route as dynamic to prevent build-time execution
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 /**
  * POST /api/admin/orders/[id]/generate-label
  * Generate shipping label for an order
  */
 export async function POST(request, { params }) {
+  // Import carriers dynamically to avoid build-time issues
+  const { createDHLShipment } = require("@/lib/carriers/dhl");
+  const { createDPDShipment } = require("@/lib/carriers/dpd");
+  
   try {
     await requireAdmin(request);
     await dbConnect();
