@@ -9,9 +9,9 @@ import { toast } from "sonner";
 
 export default function AdminLoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [email, setEmail]         = useState("");
+  const [password, setPassword]   = useState("");
+  const [error, setError]         = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
@@ -20,10 +20,10 @@ export default function AdminLoginPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/admin/login", {
-        method: "POST",
+      const res  = await fetch("/api/admin/login", {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body:    JSON.stringify({ email, password }),
       });
       const data = await res.json();
 
@@ -33,9 +33,14 @@ export default function AdminLoginPage() {
         return;
       }
 
-      toast.success("Welcome back");
-      router.push("/admin/dashboard");
-      router.refresh();
+      if (data.totpRequired) {
+        // Redirect to TOTP step — pending cookie is already set by the server
+        router.push("/admin/login/totp");
+      } else {
+        toast.success("Welcome back");
+        router.push("/admin/dashboard");
+        router.refresh();
+      }
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);
@@ -74,12 +79,12 @@ export default function AdminLoginPage() {
           {error && <p className="text-sm text-danger">{error}</p>}
 
           <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-            {submitting ? "Signing in..." : "Sign in"}
+            {submitting ? "Signing in…" : "Sign in"}
           </Button>
         </form>
 
         <div className="flex items-center gap-2 justify-center text-xs text-steel mt-8">
-          <Lock className="w-3.5 h-3.5" /> Protected by rate limiting and account lockout
+          <Lock className="w-3.5 h-3.5" /> Protected by 2FA, rate limiting and account lockout
         </div>
       </div>
     </div>
