@@ -56,7 +56,7 @@ export default function SearchBar() {
       </div>
 
       {open && (query.length >= 2) && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-panel border border-hairline rounded-sm shadow-lg z-50 overflow-hidden">
+        <div className="absolute top-full right-0 mt-1 w-72 bg-panel border border-hairline rounded-sm shadow-lg z-50 overflow-hidden">
           {loading ? (
             <p className="text-xs text-steel px-3 py-3">Searching…</p>
           ) : results.length === 0 ? (
