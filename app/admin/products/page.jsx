@@ -7,6 +7,7 @@ import Button from "@/components/ui/Button";
 import { toast } from "sonner";
 import ProductFormModal from "@/components/admin/ProductFormModal";
 import CsvImportModal from "@/components/admin/CsvImportModal";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 export default function AdminProductsPage() {
   const [products, setProducts] = useState([]);
@@ -29,7 +30,7 @@ export default function AdminProductsPage() {
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    const res = await fetch(`/api/admin/products/${id}`, { method: "DELETE" });
+    const res = await csrfFetch(`/api/admin/products/${id}`, { method: "DELETE" });
     if (res.ok) {
       toast.success("Product deleted");
       load();

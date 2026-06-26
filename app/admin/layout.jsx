@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,7 +27,7 @@ export default function AdminLayout({ children }) {
   const isLoginPage = pathname === "/admin/login";
 
   const handleLogout = async () => {
-    await fetch("/api/admin/logout", { method: "POST" });
+    await csrfFetch("/api/admin/logout", { method: "POST" });
     toast.success("Logged out");
     router.push("/admin/login");
   };

@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import { toast } from "sonner";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 const MAX_IMAGES = 6;
 
@@ -26,7 +27,7 @@ export default function ImageUploader({ images, onChange }) {
       formData.append("file", file);
 
       try {
-        const res = await fetch("/api/admin/upload", { method: "POST", body: formData });
+        const res = await csrfFetch("/api/admin/upload", { method: "POST", body: formData });
         const data = await res.json();
         if (!res.ok) {
           toast.error(data.error || `Failed to upload ${file.name}`);
@@ -48,7 +49,7 @@ export default function ImageUploader({ images, onChange }) {
   const handleRemove = async (url) => {
     onChange(images.filter((img) => img !== url));
     // Best-effort cleanup on disk - don't block the UI on this.
-    fetch("/api/admin/upload", {
+    csrfFetch("/api/admin/upload", {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ url }),

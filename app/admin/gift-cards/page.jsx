@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { formatPrice } from "@/lib/utils-shop";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 export default function AdminGiftCardsPage() {
   const [cards, setCards] = useState([]);
@@ -27,7 +28,7 @@ export default function AdminGiftCardsPage() {
   const handleCreate = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const res = await fetch("/api/admin/gift-cards", {
+    const res = await csrfFetch("/api/admin/gift-cards", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({

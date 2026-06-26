@@ -1,5 +1,7 @@
 "use client";
 
+import { csrfFetch } from "@/lib/auth/csrfFetch";
+
 import { useEffect, useState, useCallback } from "react";
 import { Check, X, Trash2, ChevronDown, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
@@ -26,7 +28,7 @@ function ReviewActionsModal({ review, onClose, onUpdated }) {
   const handleApprove = async () => {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/reviews/${review._id}`, {
+      const res = await csrfFetch(`/api/admin/reviews/${review._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "approved" }),
@@ -50,7 +52,7 @@ function ReviewActionsModal({ review, onClose, onUpdated }) {
   const handleReject = async () => {
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/reviews/${review._id}`, {
+      const res = await csrfFetch(`/api/admin/reviews/${review._id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "rejected", adminNote }),
@@ -75,7 +77,7 @@ function ReviewActionsModal({ review, onClose, onUpdated }) {
     if (!confirm("Permanently delete this review?")) return;
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/admin/reviews/${review._id}`, {
+      const res = await csrfFetch(`/api/admin/reviews/${review._id}`, {
         method: "DELETE",
       });
 
@@ -377,7 +379,7 @@ export default function AdminReviewsPage() {
 
     setBulkProcessing(true);
     try {
-      const res = await fetch("/api/admin/reviews/bulk", {
+      const res = await csrfFetch("/api/admin/reviews/bulk", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, GripVertical, X } from "lucide-react";
 import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { toast } from "sonner";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 function CategoryFormModal({ category, onClose, onSaved }) {
   const isEdit = Boolean(category);
@@ -36,7 +37,7 @@ function CategoryFormModal({ category, onClose, onSaved }) {
       const url = isEdit ? `/api/admin/categories/${category._id}` : "/api/admin/categories";
       const method = isEdit ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await csrfFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -135,7 +136,7 @@ export default function AdminCategoriesPage() {
 
   const handleDelete = async (id, name) => {
     if (!confirm(`Delete "${name}"?`)) return;
-    const res = await fetch(`/api/admin/categories/${id}`, { method: "DELETE" });
+    const res = await csrfFetch(`/api/admin/categories/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (res.ok) {
       toast.success("Category deleted");

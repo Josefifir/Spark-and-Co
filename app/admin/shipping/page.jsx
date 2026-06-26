@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Plus, Edit, Trash2, Package, Truck, AlertCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
 import { toast } from "sonner";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 export default function AdminShippingPage() {
   const [zones, setZones] = useState([]);
@@ -32,7 +33,7 @@ export default function AdminShippingPage() {
     if (!confirm("Are you sure you want to delete this shipping zone?")) return;
 
     try {
-      const res = await fetch(`/api/admin/shipping-zones/${zoneId}`, {
+      const res = await csrfFetch(`/api/admin/shipping-zones/${zoneId}`, {
         method: "DELETE",
       });
 
@@ -71,7 +72,7 @@ export default function AdminShippingPage() {
       
       const method = editingZone ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await csrfFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(zoneData),

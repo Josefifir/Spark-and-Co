@@ -8,6 +8,7 @@ import Button from "@/components/ui/Button";
 import Input from "@/components/ui/Input";
 import { toast } from "sonner";
 import Link from "next/link";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 const FULFILLMENT_OPTIONS = ["unfulfilled", "processing", "shipped", "delivered", "cancelled"];
 
@@ -35,7 +36,7 @@ export default function AdminOrderDetailPage() {
 
   const updateFulfillment = async (fulfillmentStatus) => {
     setSaving(true);
-    const res = await fetch(`/api/admin/orders/${id}`, {
+    const res = await csrfFetch(`/api/admin/orders/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fulfillmentStatus }),
@@ -51,7 +52,7 @@ export default function AdminOrderDetailPage() {
 
   const saveTracking = async () => {
     setSaving(true);
-    const res = await fetch(`/api/admin/orders/${id}`, {
+    const res = await csrfFetch(`/api/admin/orders/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ trackingNumber: tracking }),
@@ -70,7 +71,7 @@ export default function AdminOrderDetailPage() {
 
     setGeneratingLabel(true);
     try {
-      const res = await fetch(`/api/admin/orders/${id}/generate-label`, {
+      const res = await csrfFetch(`/api/admin/orders/${id}/generate-label`, {
         method: "POST",
       });
 

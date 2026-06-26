@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import Button from "@/components/ui/Button";
 import ImageUploader from "@/components/admin/ImageUploader";
 import { toast } from "sonner";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 export default function ProductFormModal({ product, onClose, onSaved }) {
   const isEdit = Boolean(product);
@@ -75,7 +76,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     if (!form.name || !form.category) return;
     setGeneratingDesc(true);
     try {
-      const res = await fetch("/api/admin/products/generate-description", {
+      const res = await csrfFetch("/api/admin/products/generate-description", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: form.name, category: form.category }),
@@ -118,7 +119,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
       const url = isEdit ? `/api/admin/products/${product._id}` : "/api/admin/products";
       const method = isEdit ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await csrfFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

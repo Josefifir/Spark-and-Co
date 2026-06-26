@@ -7,6 +7,7 @@ import Input from "@/components/ui/Input";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils-shop";
 import { generateDiscountCode } from "@/lib/utils-shop";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 function DiscountFormModal({ discount, onClose, onSaved }) {
   const isEdit = Boolean(discount);
@@ -55,7 +56,7 @@ function DiscountFormModal({ discount, onClose, onSaved }) {
       const url = isEdit ? `/api/admin/discounts/${discount._id}` : "/api/admin/discounts";
       const method = isEdit ? "PATCH" : "POST";
 
-      const res = await fetch(url, {
+      const res = await csrfFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -207,7 +208,7 @@ export default function AdminDiscountsPage() {
 
   const handleDelete = async (id, code) => {
     if (!confirm(`Delete discount code "${code}"?`)) return;
-    const res = await fetch(`/api/admin/discounts/${id}`, { method: "DELETE" });
+    const res = await csrfFetch(`/api/admin/discounts/${id}`, { method: "DELETE" });
     const data = await res.json();
     if (res.ok) {
       toast.success("Discount deleted");

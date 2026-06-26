@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { MessageCircle, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
-
-function getCsrfToken() {
-  return document.cookie
-    .split("; ")
-    .find((c) => c.startsWith("csrf_token="))
-    ?.split("=")[1] ?? "";
-}
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 export default function AdminQAPage() {
   const [questions, setQuestions] = useState([]);
@@ -35,9 +29,9 @@ export default function AdminQAPage() {
 
   const handleAnswer = async (id) => {
     if (!draft.trim()) return;
-    const res = await fetch(`/api/admin/qa/${id}`, {
+    const res = await csrfFetch(`/api/admin/qa/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfToken() },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ answer: draft }),
     });
     if (res.ok) { toast.success("Answer published"); setAnswering(null); setDraft(""); load(); }
@@ -46,7 +40,7 @@ export default function AdminQAPage() {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this question?")) return;
-    await fetch(`/api/admin/qa/${id}`, { method: "DELETE", headers: { "x-csrf-token": getCsrfToken() } });
+    await csrfFetch(`/api/admin/qa/${id}`, { method: "DELETE" });
     toast.success("Deleted");
     load();
   };

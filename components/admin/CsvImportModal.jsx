@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { X, Upload, Download, AlertCircle, CheckCircle } from "lucide-react";
 import Button from "@/components/ui/Button";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 const TEMPLATE_HEADERS = "name,sku,price,stock,category,description,isActive,featured,ageRestricted";
 const TEMPLATE_EXAMPLE = 'Zippo Classic,ZIPPO-001,12.99,50,classic,"A reliable windproof lighter",true,false,true';
@@ -35,7 +36,7 @@ export default function CsvImportModal({ onClose, onImported }) {
     form.append("file", file);
 
     try {
-      const res  = await fetch("/api/admin/products/import", { method: "POST", body: form });
+      const res  = await csrfFetch("/api/admin/products/import", { method: "POST", body: form });
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Import failed.");

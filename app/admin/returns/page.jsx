@@ -5,6 +5,7 @@ import { RotateCcw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/utils-shop";
 import Button from "@/components/ui/Button";
+import { csrfFetch } from "@/lib/auth/csrfFetch";
 
 const STATUS_COLORS = {
   requested: "text-flame border-flame/30",
@@ -36,7 +37,7 @@ export default function AdminReturnsPage() {
 
   const handleUpdate = async () => {
     if (!editing) return;
-    const res = await fetch(`/api/admin/returns/${editing.id}`, {
+    const res = await csrfFetch(`/api/admin/returns/${editing.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
