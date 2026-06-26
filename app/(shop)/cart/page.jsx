@@ -131,11 +131,11 @@ export default function CartPage() {
                   <input
                     type="number"
                     min="1"
-                    max="50"
+                    max={item.stock}
                     value={item.quantity}
                     onChange={(e) => {
                       const v = parseInt(e.target.value, 10);
-                      if (!isNaN(v) && v >= 1 && v <= 50) updateQuantity(item.productId, v);
+                      if (!isNaN(v) && v >= 1 && v <= item.stock) updateQuantity(item.productId, v);
                     }}
                     className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                     aria-label="Quantity"
