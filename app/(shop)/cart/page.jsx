@@ -18,6 +18,8 @@ export default function CartPage() {
   const [productMeta, setProductMeta] = useState({});
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
+  // stockErrors: { [productId]: string | null }
+  const [stockErrors, setStockErrors] = useState({});
 
   // Fetch product meta once when the cart is hydrated
   useEffect(() => {
@@ -119,69 +121,103 @@ export default function CartPage() {
               </div>
 
               {/* On mobile: quantity stepper sits below the name */}
-              <div className="flex items-center gap-2 mt-2 sm:hidden">
-                <div className="flex items-center border border-hairline rounded-sm">
-                  <button
-                    onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                    className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
-                    aria-label={t('cart.decreaseQuantity')}
-                  >
-                    <Minus className="w-3 h-3" />
-                  </button>
-                  <input
-                    type="number"
-                    min="1"
-                    max={item.stock}
-                    value={item.quantity}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
-                      if (!isNaN(v) && v >= 1 && v <= item.stock) updateQuantity(item.productId, v);
-                    }}
-                    className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                    aria-label="Quantity"
-                  />
-                  <button
-                    onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                    className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
-                    aria-label={t('cart.increaseQuantity')}
-                  >
-                    <Plus className="w-3 h-3" />
-                  </button>
+              <div className="flex flex-col gap-1 mt-2 sm:hidden">
+                <div className="flex items-center gap-2">
+                  <div className={`flex items-center rounded-sm border ${stockErrors[item.productId] ? 'border-danger' : 'border-hairline'}`}>
+                    <button
+                      onClick={() => { updateQuantity(item.productId, item.quantity - 1); setStockErrors(e => ({ ...e, [item.productId]: null })); }}
+                      className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                      aria-label={t('cart.decreaseQuantity')}
+                    >
+                      <Minus className="w-3 h-3" />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max={item.stock}
+                      value={item.quantity}
+                      onChange={(e) => {
+                        const v = parseInt(e.target.value, 10);
+                        if (isNaN(v) || v < 1) return;
+                        if (v > item.stock) {
+                          setStockErrors(err => ({ ...err, [item.productId]: `Only ${item.stock} in stock` }));
+                        } else {
+                          setStockErrors(err => ({ ...err, [item.productId]: null }));
+                          updateQuantity(item.productId, v);
+                        }
+                      }}
+                      className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                      aria-label="Quantity"
+                    />
+                    <button
+                      onClick={() => {
+                        if (item.quantity >= item.stock) {
+                          setStockErrors(err => ({ ...err, [item.productId]: `Only ${item.stock} in stock` }));
+                        } else {
+                          updateQuantity(item.productId, item.quantity + 1);
+                        }
+                      }}
+                      className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                      aria-label={t('cart.increaseQuantity')}
+                    >
+                      <Plus className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <span className="font-mono-tech text-sm text-paper ml-auto">
+                    {formatPrice(item.bulkPrice?.totalPriceCents || (item.priceCents * item.quantity), 'USD')}
+                  </span>
                 </div>
-                <span className="font-mono-tech text-sm text-paper ml-auto">
-                  {formatPrice(item.bulkPrice?.totalPriceCents || (item.priceCents * item.quantity), 'USD')}
-                </span>
+                {stockErrors[item.productId] && (
+                  <p className="text-xs text-danger font-mono-tech">{stockErrors[item.productId]}</p>
+                )}
               </div>
             </div>
 
-            {/* Desktop: quantity stepper */}
-            <div className="hidden sm:flex items-center border border-hairline rounded-sm">
-              <button
-                onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
-                aria-label={t('cart.decreaseQuantity')}
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-              <input
-                type="number"
-                min="1"
-                max={item.stock}
-                value={item.quantity}
-                onChange={(e) => {
-                  const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= item.stock) updateQuantity(item.productId, v);
-                }}
-                className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                aria-label="Quantity"
-              />
-              <button
-                onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
-                aria-label={t('cart.increaseQuantity')}
-              >
-                <Plus className="w-3 h-3" />
-              </button>
+            {/* Desktop: quantity stepper + error */}
+            <div className="hidden sm:flex flex-col items-end gap-1">
+              <div className={`flex items-center rounded-sm border ${stockErrors[item.productId] ? 'border-danger' : 'border-hairline'}`}>
+                <button
+                  onClick={() => { updateQuantity(item.productId, item.quantity - 1); setStockErrors(e => ({ ...e, [item.productId]: null })); }}
+                  className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                  aria-label={t('cart.decreaseQuantity')}
+                >
+                  <Minus className="w-3 h-3" />
+                </button>
+                <input
+                  type="number"
+                  min="1"
+                  max={item.stock}
+                  value={item.quantity}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (isNaN(v) || v < 1) return;
+                    if (v > item.stock) {
+                      setStockErrors(err => ({ ...err, [item.productId]: `Only ${item.stock} in stock` }));
+                    } else {
+                      setStockErrors(err => ({ ...err, [item.productId]: null }));
+                      updateQuantity(item.productId, v);
+                    }
+                  }}
+                  className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  aria-label="Quantity"
+                />
+                <button
+                  onClick={() => {
+                    if (item.quantity >= item.stock) {
+                      setStockErrors(err => ({ ...err, [item.productId]: `Only ${item.stock} in stock` }));
+                    } else {
+                      updateQuantity(item.productId, item.quantity + 1);
+                    }
+                  }}
+                  className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                  aria-label={t('cart.increaseQuantity')}
+                >
+                  <Plus className="w-3 h-3" />
+                </button>
+              </div>
+              {stockErrors[item.productId] && (
+                <p className="text-xs text-danger font-mono-tech">{stockErrors[item.productId]}</p>
+              )}
             </div>
 
             {/* Desktop: line total */}
