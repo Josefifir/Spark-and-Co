@@ -11,6 +11,7 @@ import { validateDiscountCode, incrementDiscountCodeUsage, calculateBulkPrice } 
 import { getCurrencyForCountry, convertPrice, getCurrencyConfig, formatPrice } from "@/lib/utils-currency";
 import { getCustomerSession } from "@/lib/auth/customerSession";
 import { sendLowStockAlert } from "@/lib/email/resend";
+import { getReferrerByCode } from "@/lib/referral";
 
 const CheckoutSchema = z.object({
   items: z
@@ -46,6 +47,7 @@ const CheckoutSchema = z.object({
   }),
   paymentMethod: z.enum(["stripe", "bitcoin", "sepa", "revolut"]),
   discountCode: z.string().max(20).optional(),
+  referralCode: z.string().max(20).optional(),
 });
 
 export async function POST(request) {
@@ -193,12 +195,22 @@ export async function POST(request) {
   // Check if customer is logged in
   const session = await getCustomerSession();
 
+  // Validate referral code — silently ignore invalid/self-referral codes
+  let appliedReferralCode = null;
+  if (body.referralCode) {
+    const referrer = await getReferrerByCode(body.referralCode);
+    if (referrer && referrer._id.toString() !== (session?.customerId ?? "")) {
+      appliedReferralCode = referrer.referralCode; // normalised (uppercase)
+    }
+  }
+
   const order = await Order.create({
     orderNumber,
     items: orderItems,
     subtotalCents: finalSubtotalCents,
     discountAppliedCents: finalDiscountCents,
     discountCodeUsed,
+    referralCode: appliedReferralCode,
     shippingCents: finalShippingCents,
     shippingMethod: body.shippingMethod ? {
       name: body.shippingMethod.name,

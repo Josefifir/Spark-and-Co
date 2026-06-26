@@ -4,6 +4,7 @@ import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
+import { awardReferralCredit } from "@/lib/referral";
 
 export const runtime = "nodejs";
 
@@ -45,8 +46,8 @@ export async function POST(request) {
         order.paymentStatus = "paid";
         order.fulfillmentStatus = "processing";
         await order.save();
-        
-        // Send order confirmation email
+
+        await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
         await sendOrderConfirmationEmail(order);
       }
       break;

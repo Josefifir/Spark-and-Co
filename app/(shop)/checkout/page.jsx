@@ -26,6 +26,14 @@ export default function CheckoutPage() {
   const { formatPrice, currency } = useCurrency();
   const { t, locale } = useLocale();
 
+  const [referralCode, setReferralCode] = useState("");
+
+  // Read referral code stored by the landing page
+  useEffect(() => {
+    const stored = localStorage.getItem("referral_code");
+    if (stored) setReferralCode(stored);
+  }, []);
+
   const [form, setForm] = useState({
     customerEmail: "",
     name: "",
@@ -264,6 +272,7 @@ export default function CheckoutPage() {
           ageVerified: true,
           paymentMethod,
           discountCode: appliedDiscount?.code || undefined,
+          referralCode: referralCode || undefined,
           currency,
           locale,
         }),

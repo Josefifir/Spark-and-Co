@@ -4,6 +4,7 @@ import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
+import { awardReferralCredit } from "@/lib/referral";
 
 // Stripe requires the raw, unparsed request body to verify signatures.
 export const runtime = "nodejs";
@@ -85,15 +86,15 @@ export async function POST(request) {
         order.fulfillmentStatus = "processing";
         await order.save();
         console.log('Order status updated to paid:', order.orderNumber);
-        
-        // Send order confirmation email
+
+        await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
+
         console.log('Attempting to send email to:', order.customerEmail);
         try {
           const emailResult = await sendOrderConfirmationEmail(order);
           console.log('Email send result:', emailResult);
         } catch (emailError) {
           console.error('Email send failed:', emailError);
-          // Don't fail the webhook if email fails
         }
       } else {
         console.log('Order already marked as paid, skipping email');

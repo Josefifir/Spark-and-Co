@@ -4,6 +4,7 @@ import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer";
 import { createCustomerSession, setCustomerSessionCookie } from "@/lib/auth/customerSession";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { generateReferralCode, getReferrerByCode } from "@/lib/referral";
 
 const RegisterSchema = z.object({
   email: z.string().email().max(200),
@@ -12,6 +13,7 @@ const RegisterSchema = z.object({
   lastName: z.string().min(1).max(100),
   phone: z.string().max(20).optional(),
   marketingOptIn: z.boolean().optional(),
+  referralCode: z.string().max(20).optional(),
 });
 
 export async function POST(request) {
@@ -47,6 +49,21 @@ export async function POST(request) {
   }
 
   try {
+    // Resolve referrer (if code provided)
+    let referredBy = null;
+    if (body.referralCode) {
+      const referrer = await getReferrerByCode(body.referralCode);
+      if (referrer) referredBy = referrer._id;
+    }
+
+    // Generate a unique referral code for this new customer
+    let referralCode;
+    for (let i = 0; i < 5; i++) {
+      const candidate = generateReferralCode();
+      const exists = await Customer.findOne({ referralCode: candidate }).lean();
+      if (!exists) { referralCode = candidate; break; }
+    }
+
     // Create new customer
     const customer = await Customer.create({
       email: body.email,
@@ -57,6 +74,8 @@ export async function POST(request) {
       marketingOptIn: body.marketingOptIn || false,
       loginCount: 1,
       lastLoginAt: new Date(),
+      referralCode,
+      referredBy,
     });
 
     // Create session

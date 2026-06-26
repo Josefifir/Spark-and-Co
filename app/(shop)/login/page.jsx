@@ -1,13 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PhoneInput from "@/components/ui/PhoneInput";
 
 export default function LoginPage() {
   const router = useRouter();
+  const [referralCode, setReferralCode] = useState("");
   const [isLogin, setIsLogin] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("referral_code");
+    if (stored) setReferralCode(stored);
+  }, []);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [loginData, setLoginData] = useState({
@@ -79,6 +85,7 @@ export default function LoginPage() {
           lastName: registerData.lastName,
           phone: registerData.phone,
           marketingOptIn: registerData.marketingOptIn,
+          referralCode: referralCode || undefined,
         }),
       });
 

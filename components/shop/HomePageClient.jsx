@@ -4,9 +4,18 @@ import Link from "next/link";
 import { ShieldCheck, Lock, Bitcoin, Truck } from "lucide-react";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import ProductCard from "@/components/shop/ProductCard";
+import { useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 
 export default function HomePageClient({ products }) {
   const { t } = useLocale();
+  const searchParams = useSearchParams();
+
+  // Persist ?ref= code in localStorage so checkout can pick it up
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) localStorage.setItem("referral_code", ref.toUpperCase());
+  }, [searchParams]);
 
   return (
     <div>
