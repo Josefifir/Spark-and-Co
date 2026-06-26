@@ -3,7 +3,7 @@ import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer";
 import Order from "@/lib/models/Order";
 import { getCustomerSession } from "@/lib/auth/customerSession";
-import { ensureReferralCode, getReferralUrl, REFERRAL_CREDIT_CENTS } from "@/lib/referral";
+import { ensureReferralCode, getReferralUrl, getReferralSettings } from "@/lib/referral";
 
 export async function GET() {
   const session = await getCustomerSession();
@@ -23,12 +23,17 @@ export async function GET() {
     referralCreditAwarded: true,
   });
 
+  const [url, { referralRewardCents }] = await Promise.all([
+    getReferralUrl(code),
+    getReferralSettings(),
+  ]);
+
   return NextResponse.json({
     code,
-    url: getReferralUrl(code),
+    url,
     creditsCents: customer.referralCreditsCents,
     referralCount: customer.referralCount,
     referralOrderCount,
-    rewardPerReferralCents: REFERRAL_CREDIT_CENTS,
+    rewardPerReferralCents: referralRewardCents,
   });
 }

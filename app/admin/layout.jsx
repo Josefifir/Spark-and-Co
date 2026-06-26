@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { csrfFetch } from "@/lib/auth/csrfFetch";
-import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 const NAV = [
@@ -18,6 +18,7 @@ const NAV = [
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
   { href: "/admin/gift-cards", label: "Gift Cards", icon: Gift },
   { href: "/admin/returns", label: "Returns", icon: RotateCcw },
+  { href: "/admin/referral", label: "Referral Program", icon: Share2 },
 ];
 
 export default function AdminLayout({ children }) {
