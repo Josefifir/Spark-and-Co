@@ -13,7 +13,7 @@ const subscribeSchema = z.object({
 export async function POST(request) {
   try {
     const ip = getClientIp(request);
-    const limited = rateLimit({ key: `back-in-stock:${ip}`, limit: 5, windowMs: 60_000 });
+    const limited = await rateLimit({ key: `back-in-stock:${ip}`, limit: 5, windowMs: 60_000 });
     if (!limited.allowed) {
       return NextResponse.json(
         {

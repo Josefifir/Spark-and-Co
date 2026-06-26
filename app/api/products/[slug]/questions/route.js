@@ -29,7 +29,7 @@ export async function GET(request, { params }) {
 // POST a new question
 export async function POST(request, { params }) {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `qa:${ip}`, limit: 5, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `qa:${ip}`, limit: 5, windowMs: 60_000 });
   if (!limited.allowed) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
 
   const { slug } = await params;

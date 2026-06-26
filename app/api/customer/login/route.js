@@ -10,9 +10,12 @@ const LoginSchema = z.object({
   password: z.string().min(1),
 });
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCK_DURATION_MS    = 15 * 60_000; // 15 minutes
+
 export async function POST(request) {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `login:${ip}`, limit: 10, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `login:${ip}`, limit: 10, windowMs: 60_000 });
   
   if (!limited.allowed) {
     return NextResponse.json(
@@ -34,16 +37,17 @@ export async function POST(request) {
   await dbConnect();
 
   try {
-    // Find customer and include password for comparison
+    // Find customer and include password + lockout fields for comparison
     const customer = await Customer.findOne({ email: body.email.toLowerCase() })
-      .select('+password');
+      .select('+password +failedLoginAttempts +lockedUntil');
     
-    if (!customer) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
-    }
+    // Generic error — never reveal whether the email exists
+    const genericError = NextResponse.json(
+      { error: "Invalid email or password." },
+      { status: 401 }
+    );
+
+    if (!customer) return genericError;
 
     // Check if account is active
     if (!customer.isActive) {
@@ -53,14 +57,29 @@ export async function POST(request) {
       );
     }
 
+    // Check account lockout
+    if (customer.lockedUntil && customer.lockedUntil > new Date()) {
+      return NextResponse.json(
+        { error: "Account temporarily locked. Please try again later." },
+        { status: 423 }
+      );
+    }
+
     // Verify password
     const isPasswordValid = await customer.comparePassword(body.password);
     if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: "Invalid email or password." },
-        { status: 401 }
-      );
+      customer.failedLoginAttempts = (customer.failedLoginAttempts || 0) + 1;
+      if (customer.failedLoginAttempts >= MAX_FAILED_ATTEMPTS) {
+        customer.lockedUntil         = new Date(Date.now() + LOCK_DURATION_MS);
+        customer.failedLoginAttempts = 0;
+      }
+      await customer.save();
+      return genericError;
     }
+
+    // Reset lockout counters on successful login
+    customer.failedLoginAttempts = 0;
+    customer.lockedUntil         = null;
 
     // Update login stats
     customer.lastLoginAt = new Date();

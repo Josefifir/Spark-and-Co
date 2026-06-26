@@ -12,7 +12,7 @@ const LookupSchema = z.object({
 // POST - Guest order lookup (email + order number)
 export async function POST(request) {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `order-lookup:${ip}`, limit: 10, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `order-lookup:${ip}`, limit: 10, windowMs: 60_000 });
   
   if (!limited.allowed) {
     return NextResponse.json(

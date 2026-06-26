@@ -1,8 +1,15 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function GET(request, { params }) {
+  const ip = getClientIp(request);
+  const limited = await rateLimit({ key: `order-status:${ip}`, limit: 5, windowMs: 60_000 });
+  if (!limited.allowed) {
+    return NextResponse.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+  }
+
   await dbConnect();
   const { orderNumber } = await params;
 

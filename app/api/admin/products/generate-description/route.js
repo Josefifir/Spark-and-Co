@@ -1,11 +1,27 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
 
+// Strip anything that isn't alphanumeric, common punctuation, or spaces.
+// Caps at 100 chars to prevent prompt bloat.
+function sanitiseInput(value) {
+  return String(value)
+    .replace(/[^a-zA-Z0-9 \-_.,&'()]/g, "")
+    .trim()
+    .slice(0, 100);
+}
+
 export const POST = requireAdmin(async (request) => {
-  const { name, category } = await request.json().catch(() => ({}));
+  const raw = await request.json().catch(() => ({}));
+
+  if (!raw.name || !raw.category) {
+    return NextResponse.json({ error: "name and category are required." }, { status: 400 });
+  }
+
+  const name     = sanitiseInput(raw.name);
+  const category = sanitiseInput(raw.category);
 
   if (!name || !category) {
-    return NextResponse.json({ error: "name and category are required." }, { status: 400 });
+    return NextResponse.json({ error: "name and category contain no valid characters." }, { status: 400 });
   }
 
   const apiKey = process.env.OPENAI_API_KEY;

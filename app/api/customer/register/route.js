@@ -18,7 +18,7 @@ const RegisterSchema = z.object({
 
 export async function POST(request) {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `register:${ip}`, limit: 5, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `register:${ip}`, limit: 5, windowMs: 60_000 });
   
   if (!limited.allowed) {
     return NextResponse.json(

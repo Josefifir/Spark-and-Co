@@ -11,7 +11,7 @@ const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads", "products");
 
 export const POST = requireAdmin(async (request) => {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `upload:${ip}`, limit: 30, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `upload:${ip}`, limit: 30, windowMs: 60_000 });
   if (!limited.allowed) {
     return NextResponse.json({ error: "Too many uploads. Please slow down." }, { status: 429 });
   }

@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 export async function POST(request) {
   try {
     const ip = getClientIp(request);
-    const limited = rateLimit({ key: `discount-validate:${ip}`, limit: 10, windowMs: 60_000 });
+    const limited = await rateLimit({ key: `discount-validate:${ip}`, limit: 10, windowMs: 60_000 });
     if (!limited.allowed) {
       return NextResponse.json(
         { valid: false, error: "Too many requests. Please try again later." },

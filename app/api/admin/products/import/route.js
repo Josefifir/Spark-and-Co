@@ -43,11 +43,21 @@ function parseCsv(text) {
   return rows;
 }
 
+const MAX_CSV_SIZE = 5 * 1024 * 1024; // 5 MB
+
 export const POST = requireAdmin(async (request) => {
   const formData = await request.formData();
   const file = formData.get("file");
   if (!file || typeof file === "string") {
     return NextResponse.json({ error: "No file uploaded." }, { status: 400 });
+  }
+
+  if (file.size > MAX_CSV_SIZE) {
+    return NextResponse.json({ error: "File too large. Maximum size is 5 MB." }, { status: 413 });
+  }
+
+  if (file.type && file.type !== "text/csv" && file.type !== "application/vnd.ms-excel") {
+    return NextResponse.json({ error: "Invalid file type. Please upload a CSV file." }, { status: 415 });
   }
 
   const text = await file.text();

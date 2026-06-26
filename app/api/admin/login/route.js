@@ -16,7 +16,7 @@ const LOCK_DURATION_MS    = 15 * 60_000; // 15 minutes
 export async function POST(request) {
   // Rate-limit by IP: 10 attempts per minute
   const ip      = getClientIp(request);
-  const limited = rateLimit({ key: `admin-login:${ip}`, limit: 10, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `admin-login:${ip}`, limit: 10, windowMs: 60_000 });
   if (!limited.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again shortly." },

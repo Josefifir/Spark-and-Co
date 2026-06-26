@@ -11,7 +11,7 @@ const Schema = z.object({ code: z.string().length(6).regex(/^\d{6}$/) });
 export async function POST(request) {
   // Rate-limit TOTP guessing: 5 attempts per minute per IP
   const ip      = getClientIp(request);
-  const limited = rateLimit({ key: `admin-totp:${ip}`, limit: 5, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `admin-totp:${ip}`, limit: 5, windowMs: 60_000 });
   if (!limited.allowed) {
     return NextResponse.json(
       { error: "Too many attempts. Please try again shortly." },

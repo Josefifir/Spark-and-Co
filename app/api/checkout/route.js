@@ -3,6 +3,7 @@ import { z } from "zod";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Order from "@/lib/models/Order";
+import ShippingZone from "@/lib/models/ShippingZone";
 import { stripe } from "@/lib/payments/stripe";
 import { createCoinbaseCharge } from "@/lib/payments/coinbase";
 import { generateOrderNumber } from "@/lib/utils-shop";
@@ -34,13 +35,8 @@ const CheckoutSchema = z.object({
     country: z.string().min(2).max(2), // ISO country code
   }),
   shippingMethod: z.object({
-    id: z.string(),
-    name: z.string(),
-    carrier: z.string().optional(),
-    carrierService: z.string().optional(),
-    estimatedMinDays: z.number().optional(),
-    estimatedMaxDays: z.number().optional(),
-    cost: z.number().min(0),
+    // Only the rate ID is accepted from the client — cost is re-fetched server-side.
+    id: z.string().min(1),
   }).optional(),
   ageVerified: z.literal(true, {
     errorMap: () => ({ message: "Age verification is required to purchase." }),
@@ -52,7 +48,7 @@ const CheckoutSchema = z.object({
 
 export async function POST(request) {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `checkout:${ip}`, limit: 10, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `checkout:${ip}`, limit: 10, windowMs: 60_000 });
   if (!limited.allowed) {
     return NextResponse.json({ error: "Too many requests. Please slow down." }, { status: 429 });
   }
@@ -130,7 +126,25 @@ export async function POST(request) {
     discountCodeUsed = discountValidation.code;
   }
 
-  const shippingCents = body.shippingMethod?.cost || 0;
+  // Look up shipping cost server-side from the rate stored in MongoDB.
+  // Never trust the client-submitted cost.
+  let resolvedShippingRate = null;
+  let shippingCents = 0;
+  if (body.shippingMethod?.id) {
+    const zone = await ShippingZone.findOne(
+      { "rates._id": body.shippingMethod.id, enabled: true },
+      { "rates.$": 1, name: 1 }
+    ).lean();
+    const rate = zone?.rates?.[0];
+    if (!rate || !rate.enabled) {
+      return NextResponse.json(
+        { error: "Selected shipping method is no longer available." },
+        { status: 400 }
+      );
+    }
+    shippingCents = rate.flatRate ?? 0;
+    resolvedShippingRate = rate;
+  }
   const totalCents = Math.max(0, subtotalCents - discountAppliedCents + shippingCents);
 
   // Determine currency based on shipping country
@@ -150,23 +164,6 @@ export async function POST(request) {
     finalShippingCents = convertPrice(shippingCents, baseCurrency, orderCurrency);
     finalTotalCents = convertPrice(totalCents, baseCurrency, orderCurrency);
   }
-
-  // Debug logging - BEFORE validation
-  console.log('=== CHECKOUT DEBUG ===');
-  console.log('Original (USD):', {
-    subtotalCents,
-    discountAppliedCents,
-    totalCents,
-  });
-  console.log('Converted:', {
-    orderCurrency,
-    finalSubtotalCents,
-    finalDiscountCents,
-    finalTotalCents,
-    stripeCode: currencyConfig.stripeCode
-  });
-  console.log('Payment Method:', body.paymentMethod);
-  console.log('======================');
 
   // Stripe minimum charge amounts (in cents)
   const STRIPE_MINIMUMS = {
@@ -212,12 +209,12 @@ export async function POST(request) {
     discountCodeUsed,
     referralCode: appliedReferralCode,
     shippingCents: finalShippingCents,
-    shippingMethod: body.shippingMethod ? {
-      name: body.shippingMethod.name,
-      carrier: body.shippingMethod.carrier,
-      carrierService: body.shippingMethod.carrierService,
-      estimatedMinDays: body.shippingMethod.estimatedMinDays,
-      estimatedMaxDays: body.shippingMethod.estimatedMaxDays,
+    shippingMethod: resolvedShippingRate ? {
+      name: resolvedShippingRate.name,
+      carrier: resolvedShippingRate.carrier,
+      carrierService: resolvedShippingRate.carrierService,
+      estimatedMinDays: resolvedShippingRate.estimatedMinDays,
+      estimatedMaxDays: resolvedShippingRate.estimatedMaxDays,
       cost: finalShippingCents,
     } : null,
     totalCents: finalTotalCents,
@@ -228,8 +225,8 @@ export async function POST(request) {
     ageVerifiedAt: new Date(),
     paymentMethod: body.paymentMethod,
     paymentStatus: "pending",
-    estimatedDeliveryDate: body.shippingMethod?.estimatedMaxDays
-      ? new Date(Date.now() + body.shippingMethod.estimatedMaxDays * 24 * 60 * 60 * 1000)
+    estimatedDeliveryDate: resolvedShippingRate?.estimatedMaxDays
+      ? new Date(Date.now() + resolvedShippingRate.estimatedMaxDays * 24 * 60 * 60 * 1000)
       : null,
   });
 
@@ -264,18 +261,6 @@ export async function POST(request) {
         body.paymentMethod === "sepa"    ? ["sepa_debit"] :
         body.paymentMethod === "revolut" ? ["revolut_pay"] :
         ["card"];
-
-      // Debug logging
-      console.log('Checkout Debug:', {
-        subtotalCents,
-        discountAppliedCents,
-        totalCents,
-        orderCurrency,
-        finalSubtotalCents,
-        finalDiscountCents,
-        finalTotalCents,
-        stripeCode: currencyConfig.stripeCode
-      });
 
       const paymentIntent = await stripe.paymentIntents.create({
         amount: finalTotalCents,

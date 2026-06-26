@@ -18,7 +18,7 @@ const ReturnSchema = z.object({
 // POST — customer submits a return request
 export async function POST(request) {
   const ip = getClientIp(request);
-  const limited = rateLimit({ key: `returns:${ip}`, limit: 5, windowMs: 60_000 });
+  const limited = await rateLimit({ key: `returns:${ip}`, limit: 5, windowMs: 60_000 });
   if (!limited.allowed) return NextResponse.json({ error: "Too many requests." }, { status: 429 });
 
   let body;
