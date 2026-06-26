@@ -1,14 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import StripePaymentForm from "@/components/shop/StripePaymentForm";
 
 export default function OrderDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [resuming, setResuming] = useState(false);
+  const [resumeData, setResumeData] = useState(null); // { clientSecret, paymentMethod, orderNumber }
+  const [resumeError, setResumeError] = useState(null);
 
   useEffect(() => {
     if (params.orderNumber) {
@@ -27,6 +32,25 @@ export default function OrderDetailPage() {
       console.error("Failed to fetch order:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleCompletePayment() {
+    setResuming(true);
+    setResumeError(null);
+    try {
+      const res = await fetch(`/api/customer/orders/${params.orderNumber}/resume`);
+      const data = await res.json();
+      if (!res.ok) { setResumeError(data.error || "Failed to resume payment."); return; }
+      if (data.paymentMethod === "bitcoin") {
+        window.location.href = data.hostedUrl;
+        return;
+      }
+      setResumeData(data);
+    } catch {
+      setResumeError("Something went wrong. Please try again.");
+    } finally {
+      setResuming(false);
     }
   }
 
@@ -131,6 +155,40 @@ export default function OrderDetailPage() {
             Fulfillment: {order.fulfillmentStatus}
           </span>
         </div>
+
+        {/* ── Pending payment banner ── */}
+        {order.paymentStatus === "pending" && !resumeData && (
+          <div className="border border-flame/30 bg-flame/5 rounded-sm p-4 mb-6 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-paper">Payment not yet completed</p>
+              <p className="text-xs text-paper-dim mt-0.5">Your order is reserved. Complete your payment to confirm it.</p>
+            </div>
+            <button
+              onClick={handleCompletePayment}
+              disabled={resuming}
+              className="shrink-0 px-4 py-2 bg-flame text-graphite text-sm font-medium rounded-sm hover:bg-flame-bright transition-colors disabled:opacity-50"
+            >
+              {resuming ? "Loading…" : "Complete Payment"}
+            </button>
+          </div>
+        )}
+
+        {resumeError && (
+          <p className="text-sm text-danger mb-4">{resumeError}</p>
+        )}
+
+        {/* ── Inline Stripe payment form for resumed orders ── */}
+        {resumeData?.clientSecret && (
+          <div className="border border-hairline rounded-sm p-5 mb-6">
+            <p className="text-sm font-medium text-paper mb-4">Complete your payment</p>
+            <StripePaymentForm
+              clientSecret={resumeData.clientSecret}
+              orderNumber={resumeData.orderNumber}
+              paymentMethod={resumeData.paymentMethod}
+              onSuccess={() => router.push(`/checkout/success?order=${resumeData.orderNumber}`)}
+            />
+          </div>
+        )}
 
         {/* Order Items */}
         <div className="border-t border-hairline pt-6">
