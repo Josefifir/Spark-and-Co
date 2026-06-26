@@ -60,9 +60,10 @@ export function proxy(request) {
     const accessCookie = request.cookies.get(ACCESS_COOKIE)?.value;
     const urlToken     = searchParams.get("token");
 
-    // 1. Valid URL token → issue signed access cookie
+    // 1. Valid URL token → issue signed access cookie, then redirect to clean URL
     if (urlToken && urlToken === ADMIN_ACCESS_TOKEN) {
-      const response = NextResponse.next();
+      const cleanUrl = new URL(pathname, request.url);
+      const response = NextResponse.redirect(cleanUrl);
       response.cookies.set(ACCESS_COOKIE, signAccessCookie(ADMIN_ACCESS_TOKEN), {
         httpOnly: true,
         secure:   process.env.NODE_ENV === "production",
