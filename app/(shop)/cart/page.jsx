@@ -8,72 +8,42 @@ import { useLocale } from "@/lib/i18n/LocaleContext";
 import { calculateBulkPrice } from "@/lib/utils-pricing-client";
 import Button from "@/components/ui/Button";
 import CartUpsell from "@/components/shop/CartUpsell";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 
 export default function CartPage() {
   const { items, updateQuantity, removeItem, subtotalCents, hydrated } = useCart();
   const { formatPrice } = useCurrency();
   const { t } = useLocale();
-  const [itemsWithBulkPricing, setItemsWithBulkPricing] = useState([]);
+  // bulkTiers: { [productId]: BulkPricingTier[] } — fetched once, never re-fetched on quantity change
+  const [bulkTiers, setBulkTiers] = useState({});
   const [loading, setLoading] = useState(true);
+  const fetchedRef = useRef(false);
 
+  // Fetch bulk pricing tiers once when the cart is hydrated
   useEffect(() => {
-    if (!hydrated || items.length === 0) {
-      setLoading(false);
-      return;
-    }
+    if (!hydrated) return;
+    if (fetchedRef.current) { setLoading(false); return; }
+    fetchedRef.current = true;
 
-    // Fetch product details to get bulk pricing tiers
-    const fetchProductDetails = async () => {
-      try {
-        const productIds = items.map(item => item.productId);
-        const response = await fetch('/api/products');
-        const data = await response.json();
-        
-        const enrichedItems = items.map(item => {
-          const product = data.products?.find(p => p._id === item.productId);
-          if (product && product.bulkPricingTiers) {
-            const bulkPrice = calculateBulkPrice(
-              item.priceCents,
-              item.quantity,
-              product.bulkPricingTiers
-            );
-            return {
-              ...item,
-              bulkPricingTiers: product.bulkPricingTiers,
-              bulkPrice,
-            };
-          }
-          return {
-            ...item,
-            bulkPrice: {
-              unitPriceCents: item.priceCents,
-              totalPriceCents: item.priceCents * item.quantity,
-              discountPercent: 0,
-              bulkApplied: false,
-            },
-          };
-        });
-        
-        setItemsWithBulkPricing(enrichedItems);
-      } catch (error) {
-        console.error('Error fetching product details:', error);
-        setItemsWithBulkPricing(items.map(item => ({
-          ...item,
-          bulkPrice: {
-            unitPriceCents: item.priceCents,
-            totalPriceCents: item.priceCents * item.quantity,
-            discountPercent: 0,
-            bulkApplied: false,
-          },
-        })));
-      } finally {
-        setLoading(false);
-      }
-    };
+    if (items.length === 0) { setLoading(false); return; }
 
-    fetchProductDetails();
-  }, [items, hydrated]);
+    fetch('/api/products')
+      .then(r => r.json())
+      .then(data => {
+        const tiers = {};
+        for (const p of data.products || []) tiers[p._id] = p.bulkPricingTiers || [];
+        setBulkTiers(tiers);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [hydrated]); // ← only depends on hydrated, NOT items
+
+  // Derive enriched items purely in-memory — instant, no API call
+  const itemsWithBulkPricing = useMemo(() => items.map(item => {
+    const tiers = bulkTiers[item.productId] || [];
+    const bulkPrice = calculateBulkPrice(item.priceCents, item.quantity, tiers);
+    return { ...item, bulkPricingTiers: tiers, bulkPrice };
+  }), [items, bulkTiers]);
 
   if (!hydrated || loading) {
     return <div className="max-w-4xl mx-auto px-6 py-16" />;
