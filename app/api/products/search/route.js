@@ -19,26 +19,19 @@ export async function GET(request) {
 
   const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
 
-  // Fetch name-matches and description-matches separately so name hits always come first
-  const [nameMatches, descMatches] = await Promise.all([
-    Product.find({ name: regex, isActive: true })
-      .select("name slug priceCents images category")
-      .limit(6)
-      .lean(),
-    Product.find({ description: regex, isActive: true })
-      .select("name slug priceCents images category")
-      .limit(6)
-      .lean(),
-  ]);
+  // Always try name matches first
+  const nameMatches = await Product.find({ name: regex, isActive: true })
+    .select("name slug priceCents images category")
+    .limit(6)
+    .lean();
 
-  // Merge: name matches first, then description-only matches, deduplicated, max 6
-  const seen = new Set();
-  const results = [];
-  for (const p of [...nameMatches, ...descMatches]) {
-    const id = p._id.toString();
-    if (!seen.has(id)) { seen.add(id); results.push(p); }
-    if (results.length === 6) break;
-  }
+  // Only fall back to description matches when the name search returns nothing
+  const results = nameMatches.length > 0
+    ? nameMatches
+    : await Product.find({ description: regex, isActive: true })
+        .select("name slug priceCents images category")
+        .limit(6)
+        .lean();
 
   const payload = { results: JSON.parse(JSON.stringify(results)) };
   await cache.set(cacheKey, payload, 120); // 2 min cache
