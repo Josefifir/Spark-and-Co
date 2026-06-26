@@ -106,7 +106,19 @@ export default function AdminOrderDetailPage() {
           <h1 className="font-display text-2xl font-bold text-paper">{order.orderNumber}</h1>
           <p className="text-sm text-steel mt-1">{new Date(order.createdAt).toLocaleString()}</p>
         </div>
-        <span className="font-mono-tech text-xl text-flame">{formatPrice(order.totalCents, order.currency)}</span>
+        <div className="flex items-center gap-3">
+          {order.paymentStatus === "paid" && (
+            <a
+              href={`/api/admin/orders/${id}/invoice`}
+              download={`invoice-${order.orderNumber}.pdf`}
+              className="inline-flex items-center gap-1.5 text-xs font-mono-tech text-paper-dim border border-hairline px-3 py-1.5 rounded-sm hover:border-steel hover:text-paper transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" />
+              {order.invoiceNumber ? `Invoice ${order.invoiceNumber}` : "Generate Invoice"}
+            </a>
+          )}
+          <span className="font-mono-tech text-xl text-flame">{formatPrice(order.totalCents, order.currency)}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-6 mb-8">

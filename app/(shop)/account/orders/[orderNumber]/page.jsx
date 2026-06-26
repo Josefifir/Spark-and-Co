@@ -101,12 +101,26 @@ export default function OrderDetailPage() {
               })}
             </p>
           </div>
-          <Link
-            href="/account/orders"
-            className="text-flame hover:text-flame-bright text-xs sm:text-sm font-medium font-mono-tech shrink-0"
-          >
-            ← Back to Orders
-          </Link>
+          <div className="flex items-center gap-3 shrink-0">
+            {order.paymentStatus === "paid" && order.invoiceNumber && (
+              <a
+                href={`/api/customer/orders/${order.orderNumber}/invoice`}
+                download={`invoice-${order.orderNumber}.pdf`}
+                className="inline-flex items-center gap-1.5 text-xs font-mono-tech text-paper-dim border border-hairline px-3 py-1.5 rounded-sm hover:border-steel hover:text-paper transition-colors"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Invoice {order.invoiceNumber}
+              </a>
+            )}
+            <Link
+              href="/account/orders"
+              className="text-flame hover:text-flame-bright text-xs sm:text-sm font-medium font-mono-tech"
+            >
+              ← Back to Orders
+            </Link>
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-2 mb-6">
