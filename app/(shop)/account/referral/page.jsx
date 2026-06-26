@@ -55,6 +55,8 @@ export default function ReferralPage() {
 
   if (!data) return null;
 
+  const hasMinOrder = data.minOrderCents > 0;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -66,6 +68,12 @@ export default function ReferralPage() {
         <p className="text-sm text-paper-dim">
           Share your unique link. When someone places their first order through it, you earn{" "}
           <span className="text-flame font-medium">{formatCredit(data.rewardPerReferralCents)}</span> in store credit.
+          {hasMinOrder && (
+            <>
+              {" "}Their order must be at least{" "}
+              <span className="text-flame font-medium">{formatCredit(data.minOrderCents)}</span> to qualify.
+            </>
+          )}
         </p>
       </div>
 
@@ -114,7 +122,9 @@ export default function ReferralPage() {
         <ol className="space-y-3 text-sm text-paper-dim">
           {[
             "Share your unique referral link with friends.",
-            "They visit the store through your link and make a purchase.",
+            hasMinOrder
+              ? `They visit the store through your link and place an order of at least ${formatCredit(data.minOrderCents)}.`
+              : "They visit the store through your link and make a purchase.",
             `You automatically earn ${formatCredit(data.rewardPerReferralCents)} store credit per completed order.`,
             "Your credit balance is applied at checkout — no code needed.",
           ].map((step, i) => (
@@ -124,6 +134,13 @@ export default function ReferralPage() {
             </li>
           ))}
         </ol>
+        {hasMinOrder && (
+          <p className="mt-4 pt-4 border-t border-hairline text-xs text-steel">
+            Orders below{" "}
+            <span className="font-mono-tech text-paper">{formatCredit(data.minOrderCents)}</span>{" "}
+            will not trigger the referral award.
+          </p>
+        )}
       </div>
     </div>
   );

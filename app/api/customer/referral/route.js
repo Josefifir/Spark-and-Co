@@ -23,7 +23,7 @@ export async function GET() {
     referralCreditAwarded: true,
   });
 
-  const [url, { referralRewardCents }] = await Promise.all([
+  const [url, { referralRewardCents, referralMinOrderCents }] = await Promise.all([
     getReferralUrl(code),
     getReferralSettings(),
   ]);
@@ -35,5 +35,6 @@ export async function GET() {
     referralCount: customer.referralCount,
     referralOrderCount,
     rewardPerReferralCents: referralRewardCents,
+    minOrderCents: referralMinOrderCents,
   });
 }
