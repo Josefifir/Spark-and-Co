@@ -14,12 +14,12 @@ export default function CartPage() {
   const { items, updateQuantity, removeItem, subtotalCents, hydrated } = useCart();
   const { formatPrice } = useCurrency();
   const { t } = useLocale();
-  // bulkTiers: { [productId]: BulkPricingTier[] } — fetched once, never re-fetched on quantity change
-  const [bulkTiers, setBulkTiers] = useState({});
+  // productMeta: { [productId]: { bulkPricingTiers, stock } } — fetched once on mount
+  const [productMeta, setProductMeta] = useState({});
   const [loading, setLoading] = useState(true);
   const fetchedRef = useRef(false);
 
-  // Fetch bulk pricing tiers once when the cart is hydrated
+  // Fetch product meta once when the cart is hydrated
   useEffect(() => {
     if (!hydrated) return;
     if (fetchedRef.current) { setLoading(false); return; }
@@ -30,9 +30,11 @@ export default function CartPage() {
     fetch('/api/products')
       .then(r => r.json())
       .then(data => {
-        const tiers = {};
-        for (const p of data.products || []) tiers[p._id] = p.bulkPricingTiers || [];
-        setBulkTiers(tiers);
+        const meta = {};
+        for (const p of data.products || []) {
+          meta[p._id] = { bulkPricingTiers: p.bulkPricingTiers || [], stock: p.stock ?? 50 };
+        }
+        setProductMeta(meta);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -40,10 +42,10 @@ export default function CartPage() {
 
   // Derive enriched items purely in-memory — instant, no API call
   const itemsWithBulkPricing = useMemo(() => items.map(item => {
-    const tiers = bulkTiers[item.productId] || [];
-    const bulkPrice = calculateBulkPrice(item.priceCents, item.quantity, tiers);
-    return { ...item, bulkPricingTiers: tiers, bulkPrice };
-  }), [items, bulkTiers]);
+    const meta  = productMeta[item.productId] || { bulkPricingTiers: [], stock: 50 };
+    const bulkPrice = calculateBulkPrice(item.priceCents, item.quantity, meta.bulkPricingTiers);
+    return { ...item, bulkPricingTiers: meta.bulkPricingTiers, stock: meta.stock, bulkPrice };
+  }), [items, productMeta]);
 
   if (!hydrated || loading) {
     return <div className="max-w-4xl mx-auto px-6 py-16" />;
@@ -164,11 +166,11 @@ export default function CartPage() {
               <input
                 type="number"
                 min="1"
-                max="50"
+                max={item.stock}
                 value={item.quantity}
                 onChange={(e) => {
                   const v = parseInt(e.target.value, 10);
-                  if (!isNaN(v) && v >= 1 && v <= 50) updateQuantity(item.productId, v);
+                  if (!isNaN(v) && v >= 1 && v <= item.stock) updateQuantity(item.productId, v);
                 }}
                 className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 aria-label="Quantity"
