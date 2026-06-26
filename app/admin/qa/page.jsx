@@ -5,6 +5,13 @@ import { MessageCircle, Check, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import Button from "@/components/ui/Button";
 
+function getCsrfToken() {
+  return document.cookie
+    .split("; ")
+    .find((c) => c.startsWith("csrf_token="))
+    ?.split("=")[1] ?? "";
+}
+
 export default function AdminQAPage() {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,7 +37,7 @@ export default function AdminQAPage() {
     if (!draft.trim()) return;
     const res = await fetch(`/api/admin/qa/${id}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "x-csrf-token": getCsrfToken() },
       body: JSON.stringify({ answer: draft }),
     });
     if (res.ok) { toast.success("Answer published"); setAnswering(null); setDraft(""); load(); }
@@ -39,7 +46,7 @@ export default function AdminQAPage() {
 
   const handleDelete = async (id) => {
     if (!confirm("Delete this question?")) return;
-    await fetch(`/api/admin/qa/${id}`, { method: "DELETE" });
+    await fetch(`/api/admin/qa/${id}`, { method: "DELETE", headers: { "x-csrf-token": getCsrfToken() } });
     toast.success("Deleted");
     load();
   };
