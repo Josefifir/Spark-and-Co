@@ -27,13 +27,18 @@ export async function POST(request) {
 
   await dbConnect();
 
-  // Verify order exists and belongs to this customer
+  // Require authentication — returns contain PII (address, items) and can be abused
+  // by anyone who guesses an order number without this check.
+  const session = await getCustomerSession();
+  if (!session) {
+    return NextResponse.json({ error: "You must be logged in to submit a return." }, { status: 401 });
+  }
+
+  // Verify order exists, is paid, and belongs to this customer
   const order = await Order.findOne({ orderNumber: body.orderNumber, paymentStatus: "paid" }).lean();
   if (!order) return NextResponse.json({ error: "Order not found or not yet paid." }, { status: 404 });
 
-  // If customer is logged in, verify ownership
-  const session = await getCustomerSession();
-  if (session && order.customerEmail !== session.email) {
+  if (order.customerEmail !== session.email) {
     return NextResponse.json({ error: "Order does not belong to this account." }, { status: 403 });
   }
 
