@@ -23,7 +23,7 @@ export async function POST(request) {
       );
     }
 
-    if (!subtotalCents || subtotalCents < 0) {
+    if (!subtotalCents || subtotalCents < 0 || subtotalCents > 100_000_00) {
       return NextResponse.json(
         { valid: false, error: "Invalid order total" },
         { status: 400 }

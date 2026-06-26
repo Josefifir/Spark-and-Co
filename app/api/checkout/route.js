@@ -142,7 +142,40 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    shippingCents = rate.flatRate ?? 0;
+    // Derive the actual cost using the same logic as zone.calculateRate().
+    // This handles flat_rate, free (threshold met), weight_based, price_based.
+    switch (rate.type) {
+      case "flat_rate":
+        shippingCents = rate.flatRate ?? 0;
+        break;
+      case "free":
+        shippingCents = 0;
+        break;
+      case "weight_based": {
+        // Weight is not available at this point — reject gracefully.
+        // Weight-based rates should be resolved on the shipping/calculate endpoint
+        // and stored as flat_rate equivalents, or the order must carry weightGrams.
+        return NextResponse.json(
+          { error: "Weight-based shipping rates cannot be resolved without item weights. Please contact support." },
+          { status: 400 }
+        );
+      }
+      case "price_based": {
+        const range = (rate.priceRanges || []).find(
+          (r) => subtotalCents >= (r.minPrice ?? 0) && subtotalCents <= (r.maxPrice ?? Infinity)
+        );
+        if (!range) {
+          return NextResponse.json(
+            { error: "Selected shipping method is not applicable to your order total." },
+            { status: 400 }
+          );
+        }
+        shippingCents = range.rate;
+        break;
+      }
+      default:
+        shippingCents = rate.flatRate ?? 0;
+    }
     resolvedShippingRate = rate;
   }
   const totalCents = Math.max(0, subtotalCents - discountAppliedCents + shippingCents);
@@ -175,7 +208,6 @@ export async function POST(request) {
   if (body.paymentMethod === "stripe" || body.paymentMethod === "sepa" || body.paymentMethod === "revolut") {
     const minAmount = STRIPE_MINIMUMS[currencyConfig.stripeCode] || 50;
     if (finalTotalCents < minAmount) {
-      console.log('VALIDATION FAILED: finalTotalCents =', finalTotalCents, '< minAmount =', minAmount);
       return NextResponse.json(
         {
           error: `Order total must be at least ${formatPrice(minAmount, orderCurrency)} for ${body.paymentMethod === "sepa" ? "SEPA" : "card"} payments.`,

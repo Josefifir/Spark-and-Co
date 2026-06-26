@@ -30,74 +30,42 @@ export async function POST(request) {
   switch (event.type) {
     case "checkout.session.completed": {
       const session = event.data.object;
-      console.log('Checkout session completed:', session.id);
-      console.log('Payment intent:', session.payment_intent);
-      
-      // Find order by session ID or payment intent
-      let order = await Order.findOne({
+      const order = await Order.findOne({
         $or: [
           { stripeSessionId: session.id },
-          { stripePaymentIntentId: session.payment_intent }
-        ]
-      }).populate('items.product');
-      
-      if (!order) {
-        console.log('No order found for session:', session.id);
-        break;
-      }
-      
-      console.log('Order found:', order.orderNumber, 'Status:', order.paymentStatus);
-      
-      if (order.paymentStatus !== "paid") {
-        order.paymentStatus = "paid";
-        order.fulfillmentStatus = "processing";
-        await order.save();
-        console.log('Order status updated to paid:', order.orderNumber);
-        
-        // Send order confirmation email
-        console.log('Attempting to send email to:', order.customerEmail);
-        try {
-          const emailResult = await sendOrderConfirmationEmail(order);
-          console.log('Email send result:', emailResult);
-        } catch (emailError) {
-          console.error('Email send failed:', emailError);
-          // Don't fail the webhook if email fails
-        }
-      } else {
-        console.log('Order already marked as paid, skipping email');
+          { stripePaymentIntentId: session.payment_intent },
+        ],
+      }).populate("items.product");
+
+      if (!order || order.paymentStatus === "paid") break;
+
+      order.paymentStatus = "paid";
+      order.fulfillmentStatus = "processing";
+      await order.save();
+
+      try {
+        await sendOrderConfirmationEmail(order);
+      } catch (emailError) {
+        console.error("Order confirmation email failed:", emailError.message);
       }
       break;
     }
     case "payment_intent.succeeded": {
       const intent = event.data.object;
-      console.log('Payment succeeded for intent:', intent.id);
-      
-      const order = await Order.findOne({ stripePaymentIntentId: intent.id }).populate('items.product');
-      
-      if (!order) {
-        console.log('No order found for payment intent:', intent.id);
-        break;
-      }
-      
-      console.log('Order found:', order.orderNumber, 'Status:', order.paymentStatus);
-      
-      if (order.paymentStatus !== "paid") {
-        order.paymentStatus = "paid";
-        order.fulfillmentStatus = "processing";
-        await order.save();
-        console.log('Order status updated to paid:', order.orderNumber);
+      const order = await Order.findOne({ stripePaymentIntentId: intent.id }).populate("items.product");
 
-        await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
+      if (!order || order.paymentStatus === "paid") break;
 
-        console.log('Attempting to send email to:', order.customerEmail);
-        try {
-          const emailResult = await sendOrderConfirmationEmail(order);
-          console.log('Email send result:', emailResult);
-        } catch (emailError) {
-          console.error('Email send failed:', emailError);
-        }
-      } else {
-        console.log('Order already marked as paid, skipping email');
+      order.paymentStatus = "paid";
+      order.fulfillmentStatus = "processing";
+      await order.save();
+
+      await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
+
+      try {
+        await sendOrderConfirmationEmail(order);
+      } catch (emailError) {
+        console.error("Order confirmation email failed:", emailError.message);
       }
       break;
     }
@@ -107,7 +75,6 @@ export async function POST(request) {
       if (order && order.paymentStatus === "pending") {
         order.paymentStatus = "failed";
         await order.save();
-        // restock items since payment failed
         for (const item of order.items) {
           await Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } });
         }
@@ -115,7 +82,7 @@ export async function POST(request) {
       break;
     }
     default:
-      break; // ignore other event types
+      break;
   }
 
   return NextResponse.json({ received: true });

@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "@/lib/db";
 import ShippingZone from "@/lib/models/ShippingZone";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 // POST /api/shipping/calculate - Calculate shipping rates for an address
 export async function POST(request) {
+  const ip = getClientIp(request);
+  const limited = await rateLimit({ key: `shipping-calc:${ip}`, limit: 20, windowMs: 60_000 });
+  if (!limited.allowed) {
+    return NextResponse.json({ error: "Too many requests." }, { status: 429 });
+  }
+
   try {
     await dbConnect();
 
