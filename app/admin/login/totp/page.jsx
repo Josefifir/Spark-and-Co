@@ -86,8 +86,10 @@ export default function TotpPage() {
               <input
                 key={i}
                 ref={(el) => (inputs.current[i] = el)}
-                type="text"
+                type="tel"
                 inputMode="numeric"
+                pattern="[0-9]*"
+                autoComplete={i === 0 ? "one-time-code" : "off"}
                 maxLength={1}
                 value={digit}
                 onChange={(e) => handleChange(i, e.target.value)}
