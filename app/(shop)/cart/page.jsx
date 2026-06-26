@@ -156,7 +156,18 @@ export default function CartPage() {
                   >
                     <Minus className="w-3 h-3" />
                   </button>
-                  <span className="w-8 text-center font-mono-tech text-sm text-paper">{item.quantity}</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="50"
+                    value={item.quantity}
+                    onChange={(e) => {
+                      const v = parseInt(e.target.value, 10);
+                      if (!isNaN(v) && v >= 1 && v <= 50) updateQuantity(item.productId, v);
+                    }}
+                    className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                    aria-label="Quantity"
+                  />
                   <button
                     onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                     className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
@@ -180,7 +191,18 @@ export default function CartPage() {
               >
                 <Minus className="w-3 h-3" />
               </button>
-              <span className="w-8 text-center font-mono-tech text-sm text-paper">{item.quantity}</span>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={item.quantity}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  if (!isNaN(v) && v >= 1 && v <= 50) updateQuantity(item.productId, v);
+                }}
+                className="w-10 text-center font-mono-tech text-sm text-paper bg-transparent outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                aria-label="Quantity"
+              />
               <button
                 onClick={() => updateQuantity(item.productId, item.quantity + 1)}
                 className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
