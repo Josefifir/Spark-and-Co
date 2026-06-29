@@ -4,8 +4,166 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { RotateCcw, X } from "lucide-react";
+import { toast } from "sonner";
 import StripePaymentForm from "@/components/shop/StripePaymentForm";
 
+// ── Return request form ───────────────────────────────────────────────────────
+function ReturnForm({ order, onClose, onSubmitted }) {
+  const initialItems = order.items.map((item) => ({
+    productName: item.name,
+    quantity: item.quantity,
+    reason: "",
+    selected: false,
+  }));
+  const [items, setItems] = useState(initialItems);
+  const [submitting, setSubmitting] = useState(false);
+
+  const updateItem = (i, field, value) =>
+    setItems((prev) => prev.map((it, idx) => (idx === i ? { ...it, [field]: value } : it)));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    const selected = items.filter((it) => it.selected);
+    if (selected.length === 0) {
+      toast.error("Select at least one item to return.");
+      return;
+    }
+    if (selected.some((it) => !it.reason.trim())) {
+      toast.error("Please provide a reason for each selected item.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/customer/returns", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderNumber: order.orderNumber,
+          items: selected.map(({ productName, quantity, reason }) => ({
+            productName,
+            quantity,
+            reason: reason.trim(),
+          })),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Failed to submit return request.");
+      } else {
+        toast.success("Return request submitted. We'll be in touch shortly.");
+        onSubmitted();
+      }
+    } catch {
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4" onClick={onClose}>
+      <div
+        className="bg-panel border border-hairline rounded-sm w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between p-5 border-b border-hairline sticky top-0 bg-panel">
+          <div className="flex items-center gap-2">
+            <RotateCcw className="w-4 h-4 text-flame" />
+            <h2 className="font-display font-bold text-paper">Request a Return</h2>
+          </div>
+          <button onClick={onClose} className="text-paper-dim hover:text-paper">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-5 space-y-4">
+          <p className="text-sm text-paper-dim">
+            Select the items you want to return and describe the reason for each one.
+          </p>
+
+          <div className="space-y-3">
+            {items.map((item, i) => (
+              <div
+                key={i}
+                className={`border rounded-sm p-3 transition-colors ${
+                  item.selected ? "border-flame/40 bg-flame/5" : "border-hairline"
+                }`}
+              >
+                {/* Item selector row */}
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={item.selected}
+                    onChange={(e) => updateItem(i, "selected", e.target.checked)}
+                    className="accent-flame w-4 h-4 flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-paper truncate">{item.productName}</p>
+                    <p className="text-xs text-paper-dim">Qty ordered: {item.quantity}</p>
+                  </div>
+                </label>
+
+                {/* Expanded controls when selected */}
+                {item.selected && (
+                  <div className="mt-3 space-y-2 pl-7">
+                    <div className="flex items-center gap-3">
+                      <label className="text-xs text-steel uppercase font-mono-tech w-20 flex-shrink-0">
+                        Qty to return
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={item.quantity}
+                        value={item.quantity}
+                        onChange={(e) => updateItem(i, "quantity", Math.min(Number(e.target.value), item.quantity))}
+                        className="w-20 bg-graphite border border-hairline rounded-sm px-2 py-1 text-paper text-sm focus:border-flame"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-steel uppercase font-mono-tech block mb-1">
+                        Reason <span className="text-danger">*</span>
+                      </label>
+                      <textarea
+                        rows={2}
+                        value={item.reason}
+                        onChange={(e) => updateItem(i, "reason", e.target.value)}
+                        placeholder="e.g. Wrong size, arrived damaged, not as described…"
+                        maxLength={500}
+                        required
+                        className="w-full bg-graphite border border-hairline rounded-sm px-3 py-2 text-paper text-sm focus:border-flame resize-none"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={submitting || !items.some((it) => it.selected)}
+              className="flex-1 py-2.5 bg-flame text-graphite text-sm font-semibold rounded-sm hover:bg-flame-bright transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {submitting ? "Submitting…" : "Submit Return Request"}
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2.5 border border-hairline text-paper-dim text-sm rounded-sm hover:border-steel hover:text-paper transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ── Main page ─────────────────────────────────────────────────────────────────
 export default function OrderDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -14,12 +172,8 @@ export default function OrderDetailPage() {
   const [resuming, setResuming] = useState(false);
   const [resumeData, setResumeData] = useState(null); // { clientSecret, paymentMethod, orderNumber }
   const [resumeError, setResumeError] = useState(null);
-
-  useEffect(() => {
-    if (params.orderNumber) {
-      fetchOrder();
-    }
-  }, [params.orderNumber]);
+  const [showReturnForm, setShowReturnForm] = useState(false);
+  const [returnSubmitted, setReturnSubmitted] = useState(false);
 
   async function fetchOrder() {
     try {
@@ -34,6 +188,13 @@ export default function OrderDetailPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (params.orderNumber) {
+      fetchOrder();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.orderNumber]);
 
   async function handleCompletePayment() {
     setResuming(true);
@@ -101,7 +262,7 @@ export default function OrderDetailPage() {
     return (
       <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
         <h2 className="font-display text-xl sm:text-2xl font-bold text-paper mb-4">Order Not Found</h2>
-        <p className="text-paper-dim mb-4">The order you're looking for doesn't exist.</p>
+        <p className="text-paper-dim mb-4">The order you&apos;re looking for doesn&apos;t exist.</p>
         <Link href="/account/orders" className="text-flame hover:text-flame-bright text-sm">
           ← Back to Orders
         </Link>
@@ -298,6 +459,47 @@ export default function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Return request — only visible for paid orders that are processing/shipped/delivered */}
+      {order.paymentStatus === "paid" &&
+        ["processing", "shipped", "delivered"].includes(order.fulfillmentStatus) && (
+          <div className="bg-panel rounded-sm border border-hairline p-4 sm:p-6">
+            <h3 className="font-display text-base sm:text-lg font-semibold text-paper mb-2">
+              Returns
+            </h3>
+            {returnSubmitted ? (
+              <div className="flex items-center gap-2 text-sm text-success">
+                <RotateCcw className="w-4 h-4 flex-shrink-0" />
+                Your return request has been submitted. We&apos;ll review it and get back to you shortly.
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-paper-dim mb-4">
+                  Not happy with your order? Submit a return request and we&apos;ll take care of it.
+                </p>
+                <button
+                  onClick={() => setShowReturnForm(true)}
+                  className="inline-flex items-center gap-2 px-4 py-2 border border-hairline text-paper-dim text-sm rounded-sm hover:border-flame hover:text-flame transition-colors"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Request a Return
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+      {/* Return form modal */}
+      {showReturnForm && (
+        <ReturnForm
+          order={order}
+          onClose={() => setShowReturnForm(false)}
+          onSubmitted={() => {
+            setShowReturnForm(false);
+            setReturnSubmitted(true);
+          }}
+        />
+      )}
     </div>
   );
 }
