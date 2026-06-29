@@ -131,9 +131,11 @@ function ReturnForm({ order, onClose, onSubmitted }) {
                         onChange={(e) => updateItem(i, "reason", e.target.value)}
                         placeholder="e.g. Wrong size, arrived damaged, not as described…"
                         maxLength={500}
+                        minLength={3}
                         required
                         className="w-full bg-graphite border border-hairline rounded-sm px-3 py-2 text-paper text-sm focus:border-flame resize-none"
                       />
+                      <p className="text-xs text-steel mt-1">{item.reason.length}/500 — min. 3 characters</p>
                     </div>
                   </div>
                 )}

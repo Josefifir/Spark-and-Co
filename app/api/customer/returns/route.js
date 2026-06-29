@@ -11,7 +11,7 @@ const ReturnSchema = z.object({
   items: z.array(z.object({
     productName: z.string().min(1).max(200),
     quantity: z.number().int().min(1),
-    reason: z.string().min(5).max(500),
+    reason: z.string().min(3).max(500),
   })).min(1),
 });
 
@@ -57,7 +57,7 @@ export async function POST(request) {
 }
 
 // GET — customer views their returns
-export async function GET(request) {
+export async function GET() {
   const session = await getCustomerSession();
   if (!session) return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
 
