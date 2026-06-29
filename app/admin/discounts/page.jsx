@@ -274,13 +274,19 @@ export default function AdminDiscountsPage() {
                     {d.expiresAt ? new Date(d.expiresAt).toLocaleDateString() : "Never"}
                   </td>
                   <td className="p-4">
-                    <span
-                      className={`text-xs px-2 py-1 rounded-sm border ${
-                        d.isActive ? "border-success/30 text-success" : "border-steel/30 text-steel"
-                      }`}
-                    >
-                      {d.isActive ? "Active" : "Inactive"}
-                    </span>
+                    {d.isExpired ? (
+                      <span className="text-xs px-2 py-1 rounded-sm border border-danger/30 text-danger">
+                        Expired
+                      </span>
+                    ) : (
+                      <span
+                        className={`text-xs px-2 py-1 rounded-sm border ${
+                          d.isActive ? "border-success/30 text-success" : "border-steel/30 text-steel"
+                        }`}
+                      >
+                        {d.isActive ? "Active" : "Inactive"}
+                      </span>
+                    )}
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-2 justify-end">

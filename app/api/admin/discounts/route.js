@@ -20,8 +20,16 @@ export const GET = requireAdmin(async () => {
 
     const codes = await DiscountCode.find().sort({ createdAt: -1 }).lean();
 
+    // Derive a runtime-accurate isExpired flag so the UI can display the real state
+    // without relying on a background job to flip isActive.
+    const now = new Date();
+    const annotated = codes.map((c) => ({
+      ...c,
+      isExpired: !!(c.expiresAt && c.expiresAt < now),
+    }));
+
     return NextResponse.json({
-      discounts: codes,
+      discounts: annotated,
     });
   } catch (error) {
     console.error("Error fetching discount codes:", error);
