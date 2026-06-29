@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
+import { z } from "zod";
 import { dbConnect } from "@/lib/db";
 import DiscountCode from "@/lib/models/DiscountCode";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { z } from "zod";
 import { ObjectId } from "mongodb";
+import cache, { CacheKeys } from "@/lib/cache";
 
 const UpdateDiscountCodeSchema = z.object({
   discountValue: z.number().min(0).max(999999).optional(),
@@ -46,6 +47,9 @@ export const PATCH = requireAdmin(async (request, { params }) => {
       );
     }
 
+    // Evict the cache entry so checkouts immediately see the updated/deactivated code
+    await cache.delete(CacheKeys.discountCode(discount.code));
+
     return NextResponse.json({
       discount: discount.toObject(),
     });
@@ -86,6 +90,9 @@ export const DELETE = requireAdmin(async (request, { params }) => {
         { status: 404 }
       );
     }
+
+    // Evict the cache entry so checkouts immediately reject the deleted code
+    await cache.delete(CacheKeys.discountCode(discount.code));
 
     return NextResponse.json({ success: true });
   } catch (error) {

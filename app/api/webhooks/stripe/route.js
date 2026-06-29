@@ -6,20 +6,22 @@ import Product from "@/lib/models/Product";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import { awardReferralCredit } from "@/lib/referral";
 
-// Stripe requires the raw, unparsed request body to verify signatures.
 export const runtime = "nodejs";
 
+// Stripe requires the raw body for signature verification — do NOT parse as JSON before this.
 export async function POST(request) {
   const rawBody = await request.text();
-  const signature = request.headers.get("stripe-signature");
+  const sig = request.headers.get("stripe-signature");
+
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+  if (!webhookSecret) {
+    console.error("STRIPE_WEBHOOK_SECRET is not set.");
+    return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
+  }
 
   let event;
   try {
-    event = stripe.webhooks.constructEvent(
-      rawBody,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET
-    );
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
     console.error("Stripe webhook signature verification failed:", err.message);
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
@@ -27,60 +29,69 @@ export async function POST(request) {
 
   await dbConnect();
 
+  const paymentIntent = event.data?.object;
+  const piId = paymentIntent?.id;
+  if (!piId) return NextResponse.json({ received: true });
+
   switch (event.type) {
-    case "checkout.session.completed": {
-      const session = event.data.object;
-      const order = await Order.findOne({
-        $or: [
-          { stripeSessionId: session.id },
-          { stripePaymentIntentId: session.payment_intent },
-        ],
-      }).populate("items.product");
-
-      if (!order || order.paymentStatus === "paid") break;
-
-      order.paymentStatus = "paid";
-      order.fulfillmentStatus = "processing";
-      await order.save();
-
-      try {
-        await sendOrderConfirmationEmail(order);
-      } catch (emailError) {
-        console.error("Order confirmation email failed:", emailError.message);
-      }
-      break;
-    }
     case "payment_intent.succeeded": {
-      const intent = event.data.object;
-      const order = await Order.findOne({ stripePaymentIntentId: intent.id }).populate("items.product");
+      const order = await Order.findOne({ stripePaymentIntentId: piId }).populate("items.product");
+      if (!order) break;
 
-      if (!order || order.paymentStatus === "paid") break;
+      if (order.paymentStatus !== "paid") {
+        order.paymentStatus = "paid";
+        order.fulfillmentStatus = "processing";
+        await order.save();
 
-      order.paymentStatus = "paid";
-      order.fulfillmentStatus = "processing";
-      await order.save();
-
-      await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
-
-      try {
-        await sendOrderConfirmationEmail(order);
-      } catch (emailError) {
-        console.error("Order confirmation email failed:", emailError.message);
+        await awardReferralCredit(order._id).catch((e) =>
+          console.error("Referral credit error:", e)
+        );
+        await sendOrderConfirmationEmail(order).catch((e) =>
+          console.error("Order confirmation email error:", e)
+        );
       }
       break;
     }
+
     case "payment_intent.payment_failed": {
-      const intent = event.data.object;
-      const order = await Order.findOne({ stripePaymentIntentId: intent.id });
-      if (order && order.paymentStatus === "pending") {
+      const order = await Order.findOne({ stripePaymentIntentId: piId });
+      if (!order) break;
+
+      if (order.paymentStatus === "pending") {
         order.paymentStatus = "failed";
         await order.save();
-        for (const item of order.items) {
-          await Product.updateOne({ _id: item.product }, { $inc: { stock: item.quantity } });
-        }
+
+        // Restore stock that was reserved at checkout
+        const restoreOps = order.items.map((item) => ({
+          updateOne: {
+            filter: { _id: item.product },
+            update: { $inc: { stock: item.quantity } },
+          },
+        }));
+        if (restoreOps.length) await Product.bulkWrite(restoreOps);
       }
       break;
     }
+
+    case "payment_intent.canceled": {
+      const order = await Order.findOne({ stripePaymentIntentId: piId });
+      if (!order) break;
+
+      if (order.paymentStatus === "pending") {
+        order.paymentStatus = "cancelled";
+        await order.save();
+
+        const restoreOps = order.items.map((item) => ({
+          updateOne: {
+            filter: { _id: item.product },
+            update: { $inc: { stock: item.quantity } },
+          },
+        }));
+        if (restoreOps.length) await Product.bulkWrite(restoreOps);
+      }
+      break;
+    }
+
     default:
       break;
   }

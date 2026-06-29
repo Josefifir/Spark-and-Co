@@ -13,6 +13,7 @@ import { getCurrencyForCountry, convertPrice, getCurrencyConfig, formatPrice } f
 import { getCustomerSession } from "@/lib/auth/customerSession";
 import { sendLowStockAlert } from "@/lib/email/resend";
 import { getReferrerByCode } from "@/lib/referral";
+import cache, { CacheKeys, CacheTTL } from "@/lib/cache";
 
 const CheckoutSchema = z.object({
   items: z
@@ -67,7 +68,23 @@ export async function POST(request) {
 
   // --- Server-side price & stock validation. NEVER trust client-submitted prices. ---
   const productIds = body.items.map((i) => i.productId);
-  const products = await Product.find({ _id: { $in: productIds }, isActive: true });
+
+  // Fetch only the fields checkout needs; .lean() returns plain objects (faster, less memory).
+  // salePriceCents + saleEndsAt are included so flash sale prices are applied server-side.
+  // Products are cached briefly to absorb burst traffic — stock is re-checked below from the
+  // cached snapshot, which is acceptable because stock is decremented atomically via bulkWrite.
+  const products = await Promise.all(
+    productIds.map((id) =>
+      cache.getOrSet(
+        `product:id:${id}`,
+        () =>
+          Product.findOne({ _id: id, isActive: true })
+            .select("name priceCents salePriceCents saleEndsAt stock bulkPricingTiers lowStockThreshold sku")
+            .lean(),
+        CacheTTL.SHORT // 60 s
+      )
+    )
+  );
 
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
 
@@ -87,9 +104,17 @@ export async function POST(request) {
       );
     }
 
-    // Calculate price with bulk pricing tier
+    // Resolve effective unit price — honour flash sale if active
+    const now = new Date();
+    const saleActive =
+      product.salePriceCents != null &&
+      product.salePriceCents < product.priceCents &&
+      (!product.saleEndsAt || now < new Date(product.saleEndsAt));
+    const basePriceCents = saleActive ? product.salePriceCents : product.priceCents;
+
+    // Calculate price with bulk pricing tier (applied on top of sale price if active)
     const bulkPrice = calculateBulkPrice(
-      product.priceCents,
+      basePriceCents,
       item.quantity,
       product.bulkPricingTiers || []
     );
@@ -106,13 +131,17 @@ export async function POST(request) {
   let discountAppliedCents = 0;
   let discountCodeUsed = null;
 
-  // Validate and apply discount code if provided
+  // Validate and apply discount code if provided.
+  // Discount-code results are cached for a short window to reduce DB load under burst traffic.
+  // The cache is keyed by code so rapid reuse of the same code hits Redis, not MongoDB.
+  // Note: incrementDiscountCodeUsage() always writes through to MongoDB — the cache only
+  // affects the read-validation path, not the usage counter.
   if (body.discountCode) {
     const cartItemIds = body.items.map((i) => i.productId);
-    const discountValidation = await validateDiscountCode(
-      body.discountCode,
-      subtotalCents,
-      cartItemIds
+    const discountValidation = await cache.getOrSet(
+      CacheKeys.discountCode(body.discountCode.toUpperCase().trim()),
+      () => validateDiscountCode(body.discountCode, subtotalCents, cartItemIds),
+      CacheTTL.SHORT // 60 s
     );
 
     if (!discountValidation.valid) {
@@ -128,13 +157,19 @@ export async function POST(request) {
 
   // Look up shipping cost server-side from the rate stored in MongoDB.
   // Never trust the client-submitted cost.
+  // Shipping zones are stable data (changed only by admins) — cache for 30 minutes.
   let resolvedShippingRate = null;
   let shippingCents = 0;
   if (body.shippingMethod?.id) {
-    const zone = await ShippingZone.findOne(
-      { "rates._id": body.shippingMethod.id, enabled: true },
-      { "rates.$": 1, name: 1 }
-    ).lean();
+    const zone = await cache.getOrSet(
+      `${CacheKeys.shippingZones()}:rate:${body.shippingMethod.id}`,
+      () =>
+        ShippingZone.findOne(
+          { "rates._id": body.shippingMethod.id, enabled: true },
+          { "rates.$": 1, name: 1 }
+        ).lean(),
+      CacheTTL.LONG // 30 min
+    );
     const rate = zone?.rates?.[0];
     if (!rate || !rate.enabled) {
       return NextResponse.json(

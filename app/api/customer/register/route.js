@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { randomBytes, createHash } from "crypto";
 import { dbConnect } from "@/lib/db";
 import Customer from "@/lib/models/Customer";
 import { createCustomerSession, setCustomerSessionCookie } from "@/lib/auth/customerSession";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { generateReferralCode, getReferrerByCode } from "@/lib/referral";
+import { sendVerificationEmail } from "@/lib/email/resend";
 
 const RegisterSchema = z.object({
   email: z.string().email().max(200),
@@ -64,6 +66,10 @@ export async function POST(request) {
       if (!exists) { referralCode = candidate; break; }
     }
 
+    // Generate email verification token
+    const rawVerifyToken = randomBytes(32).toString("hex");
+    const hashedVerifyToken = createHash("sha256").update(rawVerifyToken).digest("hex");
+
     // Create new customer
     const customer = await Customer.create({
       email: body.email,
@@ -76,7 +82,14 @@ export async function POST(request) {
       lastLoginAt: new Date(),
       referralCode,
       referredBy,
+      emailVerificationToken: hashedVerifyToken,
+      emailVerified: false,
     });
+
+    // Send verification email (best-effort, non-blocking)
+    sendVerificationEmail(customer, rawVerifyToken).catch((e) =>
+      console.error("Verification email error:", e)
+    );
 
     // Create session
     const token = createCustomerSession(customer);

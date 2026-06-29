@@ -5,8 +5,15 @@ import Product from "@/lib/models/Product";
 import ProductReview from "@/lib/models/ProductReview";
 import DiscountCode from "@/lib/models/DiscountCode";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
+import cache from "@/lib/cache";
+
+const STATS_CACHE_KEY = "admin:stats";
+const STATS_CACHE_TTL = 300; // 5 minutes
 
 export const GET = requireAdmin(async () => {
+  const cached = await cache.get(STATS_CACHE_KEY);
+  if (cached) return NextResponse.json(cached);
+
   await dbConnect();
 
   // Date ranges for time-based analytics
@@ -197,6 +204,8 @@ export const GET = requireAdmin(async () => {
     Order.find({}).sort({ createdAt: -1 }).limit(8).lean(),
   ]);
 
+  // Cache the assembled result before returning
+
   // Calculate growth percentages
   const revenueThisMonthValue = revenueThisMonth[0]?.total || 0;
   const revenueLastMonthValue = revenueLastMonth[0]?.total || 0;
@@ -204,7 +213,7 @@ export const GET = requireAdmin(async () => {
     ? ((revenueThisMonthValue - revenueLastMonthValue) / revenueLastMonthValue * 100).toFixed(1)
     : 0;
 
-  return NextResponse.json({
+  const result = {
     // Overview stats
     overview: {
       totalProducts,
@@ -285,5 +294,8 @@ export const GET = requireAdmin(async () => {
     
     // Recent orders (for quick view)
     recentOrders,
-  });
+  };
+
+  await cache.set(STATS_CACHE_KEY, result, STATS_CACHE_TTL);
+  return NextResponse.json(result);
 });
