@@ -47,6 +47,24 @@ function hasTotpPendingCookie(request) {
 export function proxy(request) {
   const { pathname, searchParams } = request.nextUrl;
 
+  // Block cross-origin POST/PUT/PATCH/DELETE requests to public API routes.
+  // Browsers always send an Origin header on cross-origin requests; same-origin
+  // requests from the site itself either omit it or match NEXT_PUBLIC_BASE_URL.
+  // This stops casual abuse from other origins (curl without a header spoofed,
+  // other websites embedding your API) without affecting legitimate same-origin use.
+  const allowedOrigin = process.env.NEXT_PUBLIC_BASE_URL;
+  if (allowedOrigin && pathname.startsWith("/api/")) {
+    const origin = request.headers.get("origin");
+    const method = request.method;
+    const isMutation = method === "POST" || method === "PUT" ||
+                       method === "PATCH" || method === "DELETE";
+    // Webhooks must be excluded — Stripe/Coinbase POST without an Origin header
+    const isWebhook = pathname.startsWith("/api/webhooks/");
+    if (!isWebhook && isMutation && origin && origin !== allowedOrigin) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+  }
+
   const isAdminUi  = pathname.startsWith("/admin");
   const isAdminApi = pathname.startsWith("/api/admin");
 
