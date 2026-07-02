@@ -5,6 +5,8 @@ import type { NextConfig } from "next";
 // we enable 'unsafe-eval' so React's dev tools and error overlays can work.
 // Remove 'unsafe-eval' in production for security.
 const isDev = process.env.NODE_ENV !== "production";
+const btcpayHost = process.env.BTCPAY_HOST ?? "";
+
 const scriptSrc = isDev
   ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com"
   : "script-src 'self' 'unsafe-inline' https://js.stripe.com";
@@ -19,8 +21,8 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   imgSrc,
   "font-src 'self' data:",
-  "connect-src 'self' https://api.stripe.com",
-  "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
+  `connect-src 'self' https://api.stripe.com${btcpayHost ? ` ${btcpayHost}` : ""}`,
+  `frame-src 'self' https://js.stripe.com https://hooks.stripe.com${btcpayHost ? ` ${btcpayHost}` : ""}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
