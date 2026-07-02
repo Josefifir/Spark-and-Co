@@ -11,6 +11,7 @@ const SEGMENT_LABELS = {
   marketing_opt_in: "Marketing opt-in customers only",
   all: "All customers (ignores opt-out)",
   purchased_category: "Customers who bought from a specific category",
+  inactive_90_days: "Win-back — no purchase in 90+ days (opt-in only)",
 };
 
 const STARTER_TEMPLATES = [

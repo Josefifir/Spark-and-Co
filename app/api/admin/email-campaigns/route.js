@@ -9,7 +9,7 @@ const CampaignSchema = z.object({
   subject: z.string().min(1).max(200),
   html: z.string().min(1).max(100_000),
   // Optional segment filter
-  segment: z.enum(["all", "marketing_opt_in", "purchased_category"]).default("marketing_opt_in"),
+  segment: z.enum(["all", "marketing_opt_in", "purchased_category", "inactive_90_days"]).default("marketing_opt_in"),
   category: z.string().max(50).optional(), // used when segment = "purchased_category"
   testEmail: z.string().email().max(200).optional(), // if set, only send to this address (test mode)
 });
@@ -51,6 +51,27 @@ export const POST = requireAdmin(async (request) => {
     // Filter to only those who have marketing opt-in
     const opted = await Customer.find({ email: { $in: uniqueEmails }, marketingOptIn: true }).select("email").lean();
     emails = opted.map(c => c.email);
+  } else if (body.segment === "inactive_90_days") {
+    // Win-back: customers who have NOT placed a paid order in the last 90 days
+    const Order = (await import("@/lib/models/Order")).default;
+    const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+
+    // Customers who placed at least one paid order, but none in the last 90 days
+    const recentBuyers = await Order.distinct("customerEmail", {
+      paymentStatus: "paid",
+      createdAt: { $gte: cutoff },
+    });
+    const recentSet = new Set(recentBuyers);
+
+    const allBuyers = await Order.distinct("customerEmail", { paymentStatus: "paid" });
+    const inactiveEmails = allBuyers.filter((e) => !recentSet.has(e));
+
+    // Filter to only marketing opt-in customers
+    const opted = await Customer.find({
+      email: { $in: inactiveEmails },
+      marketingOptIn: true,
+    }).select("email").lean();
+    emails = opted.map((c) => c.email);
   }
 
   if (emails.length === 0) return NextResponse.json({ sent: 0 });
