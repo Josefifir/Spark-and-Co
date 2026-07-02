@@ -2,7 +2,7 @@
 // Based on PWABuilder "Offline copy of pages + offline fallback" template
 // Strategy: StaleWhileRevalidate for all pages, offline.html as fallback
 
-const CACHE = "strike-v4";
+const CACHE = "strike-v5";
 const offlineFallbackPage = "/offline.html";
 
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js");

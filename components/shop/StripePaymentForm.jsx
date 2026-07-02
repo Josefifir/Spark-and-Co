@@ -25,12 +25,14 @@ function PaymentFormInner({ orderNumber, onSuccess }) {
     setError(null);
 
     const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
-      elements,
-      confirmParams: {
-        return_url: `${window.location.origin}/checkout/success?order=${orderNumber}`,
-      },
-      redirect: "if_required",
-    });
+        elements,
+        confirmParams: {
+          return_url: `${window.location.origin}/checkout/success?order=${orderNumber}`,
+        },
+        // "always" lets Stripe handle 3DS redirects on mobile instead of
+        // trying to open a popup that gets blocked by mobile browsers
+        redirect: "always",
+      });
 
     if (confirmError) {
       setError(confirmError.message || "Payment failed. Please check your details and try again.");

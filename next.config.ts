@@ -15,14 +15,17 @@ const scriptSrc = isDev
 // still in the DB) are not blocked. In production only https: is permitted.
 const imgSrc = isDev ? "img-src 'self' data: http: https:" : "img-src 'self' data: https:";
 
+const connectSrc = ["connect-src 'self'", "https://*.stripe.com", "https://*.stripe.network", btcpayHost].filter(Boolean).join(" ");
+const frameSrc = ["frame-src 'self'", "https://*.stripe.com", "https://*.stripe.network", btcpayHost].filter(Boolean).join(" ");
+
 const csp = [
   "default-src 'self'",
   scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   imgSrc,
   "font-src 'self' data:",
-  `connect-src 'self' https://*.stripe.com https://*.stripe.network${btcpayHost ? ` ${btcpayHost}` : ""}`,
-  `frame-src 'self' https://*.stripe.com https://*.stripe.network${btcpayHost ? ` ${btcpayHost}` : ""}`,
+  connectSrc,
+  frameSrc,
   "worker-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
