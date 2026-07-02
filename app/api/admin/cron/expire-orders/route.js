@@ -5,11 +5,11 @@ import Product from "@/lib/models/Product";
 
 export const runtime = "nodejs";
 
-// Protect this route with a shared secret passed as a header.
-// Call it from a cron job: curl -H "x-cron-secret: $CRON_SECRET" https://yourdomain.com/api/admin/cron/expire-orders
-export async function POST(request) {
+// Vercel Cron calls GET with Authorization: Bearer <CRON_SECRET>
+export async function GET(request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("x-cron-secret") !== secret) {
+  const auth = request.headers.get("authorization");
+  if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
