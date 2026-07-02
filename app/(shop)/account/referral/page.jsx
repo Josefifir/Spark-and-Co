@@ -101,14 +101,14 @@ export default function ReferralPage() {
           <input
             readOnly
             value={data.url}
-            className="flex-1 bg-graphite border border-hairline rounded-sm px-3 py-2 text-sm font-mono-tech text-paper-dim focus:outline-none focus:border-flame transition-colors"
+            className="flex-1 min-w-0 bg-graphite border border-hairline rounded-sm px-3 h-9 text-sm font-mono-tech text-paper-dim focus:outline-none focus:border-flame transition-colors"
           />
           <button
             onClick={handleCopy}
-            className="flex items-center gap-2 px-4 py-2 bg-flame text-graphite text-sm font-medium rounded-sm hover:bg-flame-bright transition-colors shrink-0"
+            className="h-9 flex items-center gap-1.5 px-3 bg-flame text-graphite text-sm font-medium rounded-sm hover:bg-flame-bright transition-colors shrink-0"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            {copied ? "Copied" : "Copy"}
+            <span>{copied ? "Copied" : "Copy"}</span>
           </button>
         </div>
         <p className="text-xs text-steel">

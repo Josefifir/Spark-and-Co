@@ -49,7 +49,7 @@ export default function LoyaltyPointsCard() {
           <Star className="w-5 h-5 text-flame fill-flame" />
           <h2 className="text-lg font-bold text-paper">Loyalty Points</h2>
         </div>
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full border" style={{ color: tier.color, borderColor: tier.color + "66" }}>
+        <span className="text-xs font-semibold px-2.5 py-1 rounded-full border whitespace-nowrap shrink-0" style={{ color: tier.color, borderColor: tier.color + "66" }}>
           {tier.name} · {tier.multiplier} pts/$
         </span>
       </div>

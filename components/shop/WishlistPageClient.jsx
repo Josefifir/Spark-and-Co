@@ -62,7 +62,7 @@ export default function WishlistPageClient() {
                   </div>
                 </Link>
                 <div className="flex-1 min-w-0">
-                  <Link href={`/products/${product.slug}`} className="text-paper font-medium hover:text-flame transition-colors block truncate">
+                  <Link href={`/products/${product.slug}`} className="text-paper font-medium hover:text-flame transition-colors block line-clamp-2 leading-snug">
                     {product.name}
                   </Link>
                   <p className="font-mono-tech text-flame text-sm">{formatPrice(price)}</p>
