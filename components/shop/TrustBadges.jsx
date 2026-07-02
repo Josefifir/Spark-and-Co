@@ -9,7 +9,7 @@ const BADGES = [
 
 export default function TrustBadges({ className = "" }) {
   return (
-    <div className={`grid grid-cols-2 sm:grid-cols-4 gap-3 ${className}`}>
+    <div className={`grid grid-cols-2 gap-3 ${className}`}>
       {BADGES.map(({ icon: Icon, label, sub }) => (
         <div key={label} className="flex items-center gap-2.5 border border-hairline rounded-sm px-3 py-2.5">
           <Icon className="w-4 h-4 text-flame shrink-0" />

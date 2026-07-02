@@ -571,44 +571,44 @@ export default function CheckoutPage() {
             <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
               {t('checkout.paymentMethod')}
             </h2>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <button
                 type="button"
                 onClick={() => setPaymentMethod("stripe")}
-                className={`flex items-center gap-2.5 justify-center border rounded-sm py-4 transition-colors ${
+                className={`flex items-center gap-2 justify-center border rounded-sm py-3 text-sm transition-colors ${
                   paymentMethod === "stripe" ? "border-flame bg-flame/5 text-flame" : "border-hairline text-paper-dim hover:border-steel"
                 }`}
               >
-                <CreditCard className="w-4 h-4" /> {t('checkout.card')}
+                <CreditCard className="w-4 h-4 shrink-0" /> {t('checkout.card')}
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentMethod("sepa")}
-                className={`flex items-center gap-2.5 justify-center border rounded-sm py-4 transition-colors ${
+                className={`flex items-center gap-2 justify-center border rounded-sm py-3 text-sm transition-colors ${
                   paymentMethod === "sepa" ? "border-flame bg-flame/5 text-flame" : "border-hairline text-paper-dim hover:border-steel"
                 }`}
                 title={t('checkout.sepaTitle')}
               >
-                <Building2 className="w-4 h-4" /> SEPA
+                <Building2 className="w-4 h-4 shrink-0" /> SEPA
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentMethod("revolut")}
-                className={`flex items-center gap-2.5 justify-center border rounded-sm py-4 transition-colors ${
+                className={`flex items-center gap-2 justify-center border rounded-sm py-3 text-sm transition-colors ${
                   paymentMethod === "revolut" ? "border-flame bg-flame/5 text-flame" : "border-hairline text-paper-dim hover:border-steel"
                 }`}
                 title={t('checkout.revolutTitle')}
               >
-                <CreditCard className="w-4 h-4" /> Revolut
+                <CreditCard className="w-4 h-4 shrink-0" /> Revolut
               </button>
               <button
                 type="button"
                 onClick={() => setPaymentMethod("bitcoin")}
-                className={`flex items-center gap-2.5 justify-center border rounded-sm py-4 transition-colors ${
+                className={`flex items-center gap-2 justify-center border rounded-sm py-3 text-sm transition-colors ${
                   paymentMethod === "bitcoin" ? "border-flame bg-flame/5 text-flame" : "border-hairline text-paper-dim hover:border-steel"
                 }`}
               >
-                <Bitcoin className="w-4 h-4" /> Bitcoin
+                <Bitcoin className="w-4 h-4 shrink-0" /> Bitcoin
               </button>
             </div>
             {paymentMethod === "sepa" && (

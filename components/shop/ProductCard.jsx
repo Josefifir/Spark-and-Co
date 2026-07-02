@@ -80,12 +80,12 @@ export default function ProductCard({ product }) {
           </p>
         )}
         
-        <div className="flex items-center justify-between">
-          <span className="font-mono-tech text-flame font-medium">
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono-tech text-flame font-medium shrink-0">
             {formatPrice(product.priceCents, 'USD')}
           </span>
-          <Button size="sm" onClick={handleAdd} disabled={product.stock === 0 || adding}>
-            {product.stock === 0 ? t('product.outOfStock') : adding ? t('common.loading') : t('product.addToCart')}
+          <Button size="sm" onClick={handleAdd} disabled={product.stock === 0 || adding} className="shrink-0 whitespace-nowrap">
+            {product.stock === 0 ? t('product.outOfStock') : adding ? "✓" : t('product.addToCart')}
           </Button>
         </div>
       </div>

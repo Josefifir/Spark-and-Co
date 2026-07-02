@@ -61,7 +61,7 @@ export default function ShippingEstimator({ priceCents }) {
           Shipping Estimate
         </span>
       </div>
-      <div className="flex gap-2 mb-3">
+      <div className="flex flex-col sm:flex-row gap-2 mb-3">
         <div className="relative flex-1">
           <select
             value={country}
@@ -79,7 +79,7 @@ export default function ShippingEstimator({ priceCents }) {
           placeholder="Post code"
           value={postalCode}
           onChange={e => setPostalCode(e.target.value)}
-          className="w-28 bg-graphite border border-hairline rounded-sm px-3 py-2 text-sm text-paper focus:border-flame transition-colors"
+          className="w-full sm:w-28 bg-graphite border border-hairline rounded-sm px-3 py-2 text-sm text-paper focus:border-flame transition-colors"
         />
       </div>
 

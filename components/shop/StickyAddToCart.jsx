@@ -26,7 +26,7 @@ export default function StickyAddToCart({ product, displayPrice }) {
   if (product.stock <= 0 && !product.allowPreorder) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 bg-panel border-t border-hairline shadow-2xl py-3 px-4 sm:px-6">
+    <div className="fixed bottom-0 left-0 right-0 z-50 bg-panel border-t border-hairline shadow-2xl py-3 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
         <div className="min-w-0">
           <p className="font-medium text-paper text-sm truncate">{product.name}</p>

@@ -111,6 +111,10 @@ export default function Header() {
           {/* Panel */}
           <div className="lg:hidden fixed top-14 sm:top-16 left-0 right-0 z-40 bg-graphite border-b border-hairline shadow-xl">
             <nav className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-1">
+              {/* Search — visible in mobile drawer only (hidden sm:flex in header) */}
+              <div className="pb-3 border-b border-hairline mb-1">
+                <SearchBar />
+              </div>
               {navLinks.map((l) => (
                 <Link
                   key={l.href}
@@ -120,10 +124,11 @@ export default function Header() {
                   {l.label}
                 </Link>
               ))}
-              {/* Switchers in mobile menu — align="left" so dropdowns open rightward */}
+              {/* Language, currency, dark mode */}
               <div className="flex items-center gap-3 px-3 pt-4 mt-2 border-t border-hairline">
                 <LanguageSwitcher align="left" />
                 <CurrencySwitcher align="left" />
+                <DarkModeToggle />
               </div>
             </nav>
           </div>
