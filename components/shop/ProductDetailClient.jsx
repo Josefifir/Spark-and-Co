@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Flame, Minus, Plus, ShieldCheck, Lock } from "lucide-react";
+import { Flame, Minus, Plus, Play, Clock } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import { useCurrency } from "@/lib/currency/CurrencyContext";
 import { useLocale } from "@/lib/i18n/LocaleContext";
@@ -13,6 +13,9 @@ import ReviewList from "@/components/shop/ReviewList";
 import ReviewForm from "@/components/shop/ReviewForm";
 import TrustBadges from "@/components/shop/TrustBadges";
 import FlashSaleBadge from "@/components/shop/FlashSaleBadge";
+import ProductSpecsTable from "@/components/shop/ProductSpecsTable";
+import ShippingEstimator from "@/components/shop/ShippingEstimator";
+import ProductQA from "@/components/shop/ProductQA";
 
 export default function ProductDetailClient({ product, relatedProducts = [], reviews = [], reviewToken = null }) {
   const { addItem } = useCart();
@@ -20,6 +23,9 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
   const { t } = useLocale();
   const [quantity, setQuantity] = useState(1);
   const [soldToday, setSoldToday] = useState(0);
+  const [activeImage, setActiveImage] = useState(0);
+  const [showVideo, setShowVideo] = useState(false);
+  const [personalisationText, setPersonalisationText] = useState("");
 
   useEffect(() => {
     fetch(`/api/products/${product.slug}/sold-today`)
@@ -28,27 +34,75 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
       .catch(() => {});
   }, [product.slug]);
 
+  const isOnSale = product.salePriceCents && product.saleEndsAt && new Date(product.saleEndsAt) > new Date();
+  const displayPrice = isOnSale ? product.salePriceCents : product.priceCents;
+  const inStock = product.stock > 0;
+  const isPreorderAvailable = !inStock && product.allowPreorder;
+
   const handleAdd = () => {
-    addItem(product, quantity);
+    addItem({ ...product, personalisationText: product.personalisationEnabled ? personalisationText : undefined }, quantity);
     toast.success(t('success.addedToCartWithQuantity', { quantity, name: product.name }));
   };
 
   return (
     <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 sm:py-16">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12">
-        {/* Image */}
-        <div className="aspect-square bg-panel border border-hairline rounded-sm relative flex items-center justify-center overflow-hidden">
-          {product.images?.[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <Flame className="w-20 h-20 text-steel/30" />
+        {/* Image gallery */}
+        <div className="space-y-3">
+          <div className="aspect-square bg-panel border border-hairline rounded-sm relative flex items-center justify-center overflow-hidden">
+            {showVideo && product.videoUrl ? (
+              <video
+                src={product.videoUrl}
+                controls
+                autoPlay
+                className="w-full h-full object-contain"
+              />
+            ) : product.images?.[activeImage] ? (
+              <Image
+                src={product.images[activeImage]}
+                alt={product.name}
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+                priority
+              />
+            ) : (
+              <Flame className="w-20 h-20 text-steel/30" />
+            )}
+
+            {/* Video play button overlay */}
+            {product.videoUrl && !showVideo && (
+              <button
+                onClick={() => setShowVideo(true)}
+                className="absolute bottom-3 right-3 bg-black/60 hover:bg-black/80 text-white rounded-full p-2.5 transition-colors"
+                aria-label="Play video"
+              >
+                <Play className="w-4 h-4 fill-white" />
+              </button>
+            )}
+          </div>
+
+          {/* Thumbnail strip (multiple images + video thumb) */}
+          {(product.images?.length > 1 || product.videoUrl) && (
+            <div className="flex gap-2">
+              {product.images?.map((img, i) => (
+                <button
+                  key={i}
+                  onClick={() => { setActiveImage(i); setShowVideo(false); }}
+                  className={`w-14 h-14 rounded-sm border overflow-hidden shrink-0 transition-colors ${activeImage === i && !showVideo ? "border-flame" : "border-hairline"}`}
+                >
+                  <Image src={img} alt="" width={56} height={56} className="object-cover w-full h-full" />
+                </button>
+              ))}
+              {product.videoUrl && (
+                <button
+                  onClick={() => setShowVideo(true)}
+                  className={`w-14 h-14 rounded-sm border flex items-center justify-center shrink-0 transition-colors ${showVideo ? "border-flame bg-flame/10" : "border-hairline bg-panel"}`}
+                >
+                  <Play className="w-5 h-5 text-flame" />
+                </button>
+              )}
+            </div>
           )}
         </div>
 
@@ -62,23 +116,18 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
           </h1>
           <p className="text-paper-dim leading-relaxed mb-6">{product.description}</p>
 
-          {product.salePriceCents && product.saleEndsAt && new Date(product.saleEndsAt) > new Date() ? (
+          {isOnSale && (
             <FlashSaleBadge
               salePriceCents={product.salePriceCents}
               saleEndsAt={product.saleEndsAt}
               originalPriceCents={product.priceCents}
               formatPrice={formatPrice}
             />
-          ) : null}
+          )}
 
           <div className="flex items-center justify-between border-y border-hairline py-4 mb-6">
             <span className="font-mono-tech text-2xl text-flame font-medium">
-              {formatPrice(
-                product.salePriceCents && product.saleEndsAt && new Date(product.saleEndsAt) > new Date()
-                  ? product.salePriceCents
-                  : product.priceCents,
-                'USD'
-              )}
+              {formatPrice(displayPrice, 'USD')}
             </span>
             <div className="text-right">
               <span className="text-xs font-mono-tech text-steel block">SKU {product.sku}</span>
@@ -90,7 +139,25 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
             </div>
           </div>
 
-          {product.stock > 0 ? (
+          {/* Personalisation input */}
+          {product.personalisationEnabled && (
+            <div className="mb-5">
+              <label className="block text-xs font-mono-tech text-paper-dim uppercase tracking-wider mb-1.5">
+                {product.personalisationPrompt || "Personalisation / Engraving"}
+              </label>
+              <input
+                type="text"
+                value={personalisationText}
+                onChange={e => setPersonalisationText(e.target.value.slice(0, product.personalisationMaxLength || 20))}
+                placeholder={`Max ${product.personalisationMaxLength || 20} characters`}
+                className="w-full bg-graphite border border-hairline rounded-sm px-3.5 py-2.5 text-paper focus:border-flame transition-colors text-sm"
+                maxLength={product.personalisationMaxLength || 20}
+              />
+              <p className="text-xs text-steel mt-1">{personalisationText.length}/{product.personalisationMaxLength || 20} characters</p>
+            </div>
+          )}
+
+          {inStock ? (
             <>
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-xs font-mono-tech text-paper-dim uppercase">{t('product.quantity')}</span>
@@ -117,7 +184,22 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
               </div>
 
               <Button size="lg" className="w-full" onClick={handleAdd}>
-                {t('product.addToCart')} — {formatPrice(product.priceCents * quantity, 'USD')}
+                {t('product.addToCart')} — {formatPrice(displayPrice * quantity, 'USD')}
+              </Button>
+            </>
+          ) : isPreorderAvailable ? (
+            <>
+              <div className="bg-flame/10 border border-flame/30 rounded-sm px-4 py-3 mb-4 flex items-center gap-2">
+                <Clock className="w-4 h-4 text-flame shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-flame">Pre-order available</p>
+                  {product.preorderNote && (
+                    <p className="text-xs text-paper-dim mt-0.5">{product.preorderNote}</p>
+                  )}
+                </div>
+              </div>
+              <Button size="lg" className="w-full" onClick={handleAdd}>
+                Pre-order — {formatPrice(displayPrice, 'USD')}
               </Button>
             </>
           ) : (
@@ -127,6 +209,12 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
           )}
 
           <TrustBadges className="mt-8" />
+
+          {/* Specs table */}
+          <ProductSpecsTable specs={product.specs} />
+
+          {/* Shipping estimator */}
+          <ShippingEstimator productId={product._id} priceCents={displayPrice} />
         </div>
       </div>
 
@@ -140,6 +228,9 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
           </div>
         </section>
       )}
+
+      {/* Q&A section */}
+      <ProductQA slug={product.slug} />
 
       {/* Customer reviews section */}
       <section className="mt-20 pt-12 border-t border-hairline">

@@ -21,12 +21,25 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     stock: product?.stock ?? 0,
     sku: product?.sku || "",
     images: product?.images || [],
+    videoUrl: product?.videoUrl || "",
     isActive: product?.isActive ?? true,
     featured: product?.featured ?? false,
+    ageRestricted: product?.ageRestricted ?? true,
     bulkPricingTiers: product?.bulkPricingTiers || [],
     salePrice: product?.salePriceCents ? (product.salePriceCents / 100).toFixed(2) : "",
     saleEndsAt: product?.saleEndsAt ? new Date(product.saleEndsAt).toISOString().slice(0, 16) : "",
     lowStockThreshold: product?.lowStockThreshold ?? "",
+    // Pre-order
+    allowPreorder: product?.allowPreorder ?? false,
+    preorderNote: product?.preorderNote || "",
+    // Specs
+    specs: product?.specs || [],
+    // Personalisation
+    personalisationEnabled: product?.personalisationEnabled ?? false,
+    personalisationPrompt: product?.personalisationPrompt || "",
+    personalisationMaxLength: product?.personalisationMaxLength ?? 20,
+    // Shipping restrictions (comma-separated country codes)
+    shippingRestrictionsRaw: (product?.shippingRestrictions || []).join(", "),
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -94,6 +107,13 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
     }
   };
 
+  const addSpec = () => setForm(f => ({ ...f, specs: [...f.specs, { label: "", value: "" }] }));
+  const removeSpec = (i) => setForm(f => ({ ...f, specs: f.specs.filter((_, j) => j !== i) }));
+  const updateSpec = (i, field, value) => setForm(f => ({
+    ...f,
+    specs: f.specs.map((s, j) => j === i ? { ...s, [field]: value } : s),
+  }));
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
@@ -107,12 +127,23 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
       stock: parseInt(form.stock, 10),
       sku: form.sku,
       images: form.images,
+      videoUrl: form.videoUrl || null,
       isActive: form.isActive,
       featured: form.featured,
+      ageRestricted: form.ageRestricted,
       bulkPricingTiers: form.bulkPricingTiers,
       salePriceCents: form.salePrice ? Math.round(parseFloat(form.salePrice) * 100) : null,
       saleEndsAt: form.saleEndsAt ? new Date(form.saleEndsAt).toISOString() : null,
       lowStockThreshold: form.lowStockThreshold !== "" ? parseInt(form.lowStockThreshold, 10) : null,
+      allowPreorder: form.allowPreorder,
+      preorderNote: form.preorderNote || null,
+      specs: form.specs.filter(s => s.label && s.value),
+      personalisationEnabled: form.personalisationEnabled,
+      personalisationPrompt: form.personalisationPrompt || null,
+      personalisationMaxLength: parseInt(form.personalisationMaxLength, 10) || 20,
+      shippingRestrictions: form.shippingRestrictionsRaw
+        ? form.shippingRestrictionsRaw.split(",").map(s => s.trim().toUpperCase()).filter(Boolean)
+        : [],
     };
 
     try {
@@ -222,7 +253,7 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             onChange={(images) => setForm((f) => ({ ...f, images }))}
           />
 
-          <div className="flex gap-6">
+          <div className="flex flex-wrap gap-6">
             <label className="flex items-center gap-2 text-sm text-paper-dim cursor-pointer">
               <input type="checkbox" checked={form.isActive} onChange={update("isActive")} className="accent-flame" />
               Active (visible in store)
@@ -231,7 +262,24 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
               <input type="checkbox" checked={form.featured} onChange={update("featured")} className="accent-flame" />
               Featured
             </label>
+            <label className="flex items-center gap-2 text-sm text-paper-dim cursor-pointer">
+              <input type="checkbox" checked={form.ageRestricted} onChange={update("ageRestricted")} className="accent-flame" />
+              Age restricted
+            </label>
+            <label className="flex items-center gap-2 text-sm text-paper-dim cursor-pointer">
+              <input type="checkbox" checked={form.allowPreorder} onChange={update("allowPreorder")} className="accent-flame" />
+              Allow pre-orders when out of stock
+            </label>
           </div>
+
+          {form.allowPreorder && (
+            <Input
+              label="Pre-order note (shown to customers)"
+              value={form.preorderNote}
+              onChange={update("preorderNote")}
+              placeholder="e.g. Ships in 2–3 weeks"
+            />
+          )}
 
           {/* Flash Sale Section */}
           <div className="border border-hairline rounded-sm p-4 space-y-3">
@@ -260,6 +308,15 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             </div>
           </div>
 
+          {/* Video */}
+          <Input
+            label="Product video URL (optional)"
+            type="url"
+            value={form.videoUrl}
+            onChange={update("videoUrl")}
+            placeholder="https://… (mp4, webm, etc.)"
+          />
+
           {/* Low Stock Threshold */}
           <Input
             label="Low Stock Alert Threshold"
@@ -268,6 +325,61 @@ export default function ProductFormModal({ product, onClose, onSaved }) {
             value={form.lowStockThreshold}
             onChange={update("lowStockThreshold")}
             placeholder="e.g. 5 — email sent when stock drops to this"
+          />
+
+          {/* Specs */}
+          <div className="border border-hairline rounded-sm p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs uppercase tracking-wider text-paper-dim font-mono-tech">
+                Spec Table (fuel type, dimensions, weight, etc.)
+              </label>
+              <Button type="button" size="sm" variant="secondary" onClick={addSpec}>
+                <Plus className="w-3 h-3" /> Add spec
+              </Button>
+            </div>
+            {form.specs.length === 0 ? (
+              <p className="text-xs text-steel">No specs yet. Click "Add spec" to add rows.</p>
+            ) : (
+              <div className="space-y-2">
+                {form.specs.map((spec, i) => (
+                  <div key={i} className="flex gap-2 items-end">
+                    <div className="flex-1 flex flex-col gap-1">
+                      <label className="text-[10px] uppercase text-steel font-mono-tech">Label</label>
+                      <input type="text" value={spec.label} onChange={e => updateSpec(i, "label", e.target.value)} placeholder="e.g. Fuel type" className="bg-graphite border border-hairline rounded-sm px-2 py-1.5 text-sm text-paper focus:border-flame transition-colors" />
+                    </div>
+                    <div className="flex-1 flex flex-col gap-1">
+                      <label className="text-[10px] uppercase text-steel font-mono-tech">Value</label>
+                      <input type="text" value={spec.value} onChange={e => updateSpec(i, "value", e.target.value)} placeholder="e.g. Butane" className="bg-graphite border border-hairline rounded-sm px-2 py-1.5 text-sm text-paper focus:border-flame transition-colors" />
+                    </div>
+                    <button type="button" onClick={() => removeSpec(i)} className="text-steel hover:text-danger p-1 mb-0.5">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Personalisation */}
+          <div className="border border-hairline rounded-sm p-4 space-y-3">
+            <label className="flex items-center gap-2 text-sm text-paper-dim cursor-pointer font-mono-tech text-xs uppercase tracking-wider">
+              <input type="checkbox" checked={form.personalisationEnabled} onChange={update("personalisationEnabled")} className="accent-flame" />
+              Enable personalisation / engraving
+            </label>
+            {form.personalisationEnabled && (
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <Input label="Prompt shown to customer" value={form.personalisationPrompt} onChange={update("personalisationPrompt")} placeholder="Enter engraving text" />
+                <Input label="Max characters" type="number" min="1" max="200" value={form.personalisationMaxLength} onChange={update("personalisationMaxLength")} />
+              </div>
+            )}
+          </div>
+
+          {/* Shipping restrictions */}
+          <Input
+            label="Blocked shipping countries (comma-separated ISO codes)"
+            value={form.shippingRestrictionsRaw}
+            onChange={update("shippingRestrictionsRaw")}
+            placeholder="e.g. US, CN, RU"
           />
 
           {/* Bulk Pricing Section */}

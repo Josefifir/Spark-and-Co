@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { csrfFetch } from "@/lib/auth/csrfFetch";
-import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2 } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Star } from "lucide-react";
 import { toast } from "sonner";
 
 const NAV = [
   { href: "/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/products", label: "Products", icon: Package },
+  { href: "/admin/bundles", label: "Bundle Deals", icon: Boxes },
   { href: "/admin/categories", label: "Categories", icon: Tag },
   { href: "/admin/discounts", label: "Discount Codes", icon: Percent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquare },
@@ -19,6 +20,7 @@ const NAV = [
   { href: "/admin/gift-cards", label: "Gift Cards", icon: Gift },
   { href: "/admin/returns", label: "Returns", icon: RotateCcw },
   { href: "/admin/referral", label: "Referral Program", icon: Share2 },
+  { href: "/admin/email-campaigns", label: "Email Campaigns", icon: Mail },
 ];
 
 export default function AdminLayout({ children }) {

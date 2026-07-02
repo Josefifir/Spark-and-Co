@@ -21,6 +21,7 @@ const CheckoutSchema = z.object({
       z.object({
         productId: z.string().min(1),
         quantity: z.number().int().min(1).max(50),
+        personalisationText: z.string().max(200).optional(),
       })
     )
     .min(1)
@@ -79,7 +80,7 @@ export async function POST(request) {
         `product:id:${id}`,
         () =>
           Product.findOne({ _id: id, isActive: true })
-            .select("name priceCents salePriceCents saleEndsAt stock bulkPricingTiers lowStockThreshold sku")
+            .select("name priceCents salePriceCents saleEndsAt stock bulkPricingTiers lowStockThreshold sku allowPreorder shippingRestrictions personalisationEnabled personalisationMaxLength")
             .lean(),
         CacheTTL.SHORT // 60 s
       )
@@ -87,6 +88,7 @@ export async function POST(request) {
   );
 
   const productMap = new Map(products.map((p) => [p._id.toString(), p]));
+  const country = body.shippingAddress.country;
 
   const orderItems = [];
   for (const item of body.items) {
@@ -97,7 +99,18 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-    if (product.stock < item.quantity) {
+
+    // Country restriction check
+    if (product.shippingRestrictions?.includes(country)) {
+      return NextResponse.json(
+        { error: `${product.name} cannot be shipped to your country.` },
+        { status: 400 }
+      );
+    }
+
+    // Pre-order / stock check
+    const outOfStock = product.stock < item.quantity;
+    if (outOfStock && !product.allowPreorder) {
       return NextResponse.json(
         { error: `Insufficient stock for ${product.name}. Only ${product.stock} left.` },
         { status: 409 }
@@ -119,11 +132,18 @@ export async function POST(request) {
       product.bulkPricingTiers || []
     );
 
+    // Resolve personalisation text from client-submitted items
+    const clientItem = body.items.find(ci => ci.productId === item.productId);
+
     orderItems.push({
       product: product._id,
       name: product.name,
       priceCents: bulkPrice.unitPriceCents, // server-trusted price snapshot, with bulk discount
       quantity: item.quantity,
+      isPreorder: outOfStock && product.allowPreorder,
+      personalisationText: product.personalisationEnabled && clientItem?.personalisationText
+        ? String(clientItem.personalisationText).slice(0, product.personalisationMaxLength || 20)
+        : null,
     });
   }
 

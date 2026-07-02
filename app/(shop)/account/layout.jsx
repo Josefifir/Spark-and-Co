@@ -67,6 +67,7 @@ export default function AccountLayout({ children }) {
     { href: "/account", label: "Profile", exact: true },
     { href: "/account/orders", label: "Orders" },
     { href: "/account/addresses", label: "Addresses" },
+    { href: "/account/loyalty", label: "Loyalty Points" },
     { href: "/account/referral", label: "Referral" },
   ];
 

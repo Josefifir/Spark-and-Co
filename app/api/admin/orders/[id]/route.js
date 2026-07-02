@@ -5,7 +5,7 @@ import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
 import { stripe } from "@/lib/payments/stripe";
 import { requireAdmin } from "@/lib/auth/requireAdmin";
-import { sendShippingNotificationEmail } from "@/lib/email/resend";
+import { sendShippingNotificationEmail, sendDeliveryConfirmationEmail } from "@/lib/email/resend";
 
 const UpdateSchema = z.object({
   fulfillmentStatus: z.enum(["unfulfilled", "processing", "shipped", "delivered", "cancelled"]).optional(),
@@ -49,6 +49,18 @@ export const PATCH = requireAdmin(async (request, { params }) => {
   ) {
     sendShippingNotificationEmail(order).catch((e) =>
       console.error("Shipping notification email error:", e)
+    );
+  }
+
+  // Side-effect: delivery confirmation + review request when transitioning to "delivered"
+  if (
+    data.fulfillmentStatus === "delivered" &&
+    previousFulfillmentStatus !== "delivered"
+  ) {
+    // Populate items.product so review links can be generated
+    const populatedOrder = await Order.findById(order._id).populate("items.product", "_id slug name");
+    sendDeliveryConfirmationEmail(populatedOrder).catch((e) =>
+      console.error("Delivery confirmation email error:", e)
     );
   }
 

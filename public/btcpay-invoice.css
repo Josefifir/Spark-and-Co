@@ -1,0 +1,211 @@
+/*
+ * Spark & Co. — BTCPay Server Invoice Custom CSS
+ * Upload: Store Settings → Branding → Custom CSS
+ */
+
+/* ── Page background ──────────────────────────────────── */
+html, body {
+  background-color: #16171a !important;
+  color: #edeae3 !important;
+  font-family: -apple-system, "Segoe UI", system-ui, sans-serif !important;
+}
+
+/* ── Main checkout wrapper / card ─────────────────────── */
+#app,
+.vh-100,
+.min-vh-100 {
+  background-color: #16171a !important;
+}
+
+.checkout,
+.checkout-flow,
+.payment-box,
+.app-body,
+.tile,
+.card {
+  background-color: #1f2023 !important;
+  border: 1px solid #34363b !important;
+  border-radius: 8px !important;
+  box-shadow: 0 0 0 1px #34363b !important;
+}
+
+/* ── ALL text — catch-all so nothing stays dark-on-dark ── */
+*:not(button):not(.btn):not([class*="btn-"]):not(svg):not(path) {
+  color: #edeae3;
+}
+
+/* ── BTC / fiat amount (large top figure) ─────────────── */
+.payment__currencies,
+.payment__currencies-btc,
+.js-store-name,
+.checkout__title,
+.h3, h3,
+.h4, h4,
+.lead,
+[class*="amount"],
+[class*="total"],
+[class*="price"] {
+  color: #edeae3 !important;
+  font-weight: 700 !important;
+}
+
+/* ── "View Details" and all anchors ──────────────────── */
+a, a * {
+  color: #ff7a1a !important;
+  text-decoration: none !important;
+}
+a:hover {
+  color: #ffa54d !important;
+  text-decoration: underline !important;
+}
+
+/* ── "Pay in wallet" primary button ──────────────────── */
+.btn-primary,
+.btn-primary *,
+button.btn-primary {
+  background-color: #ff7a1a !important;
+  border-color: #ff7a1a !important;
+  color: #16171a !important;
+  font-weight: 700 !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  padding: 12px 24px !important;
+}
+.btn-primary:hover,
+button.btn-primary:hover {
+  background-color: #ffa54d !important;
+  border-color: #ffa54d !important;
+  color: #16171a !important;
+}
+
+/* ── Secondary / outline buttons ─────────────────────── */
+.btn-secondary,
+.btn-outline-secondary,
+.btn-default {
+  background-color: transparent !important;
+  border: 1px solid #34363b !important;
+  color: #edeae3 !important;
+  border-radius: 4px !important;
+}
+.btn-secondary:hover,
+.btn-outline-secondary:hover {
+  border-color: #ff7a1a !important;
+  color: #ff7a1a !important;
+}
+
+/* ── QR code — keep white background so it scans ─────── */
+.qr-container,
+.qr-code,
+.qr img,
+canvas[class*="qr"],
+img[class*="qr"],
+img[src*="qr"] {
+  background-color: #ffffff !important;
+  border-radius: 6px !important;
+  padding: 10px !important;
+}
+
+/* ── Bitcoin address field ────────────────────────────── */
+.input-group,
+.input-group-text,
+.form-control,
+input[readonly],
+textarea[readonly] {
+  background-color: #26282c !important;
+  border: 1px solid #34363b !important;
+  color: #b8b5ad !important;
+  border-radius: 4px !important;
+  font-family: "SFMono-Regular", Consolas, monospace !important;
+  font-size: 12px !important;
+}
+
+/* ── "ADDRESS" label above the address field ─────────── */
+.form-label,
+label,
+.text-muted,
+.text-secondary,
+small {
+  color: #8a8d93 !important;
+  font-size: 11px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.07em !important;
+}
+
+/* ── Copy icon button ─────────────────────────────────── */
+.btn-copy,
+.input-group .btn,
+.input-group button {
+  background-color: #26282c !important;
+  border: 1px solid #34363b !important;
+  color: #8a8d93 !important;
+}
+.btn-copy:hover,
+.input-group .btn:hover,
+.input-group button:hover {
+  color: #ff7a1a !important;
+  border-color: #ff7a1a !important;
+}
+
+/* ── Payment method tabs ──────────────────────────────── */
+.nav-tabs {
+  border-bottom: 1px solid #34363b !important;
+}
+.nav-tabs .nav-link {
+  color: #8a8d93 !important;
+  background: transparent !important;
+  border-color: transparent !important;
+}
+.nav-tabs .nav-link.active,
+.nav-tabs .nav-item.show .nav-link {
+  color: #ff7a1a !important;
+  background: transparent !important;
+  border-bottom: 2px solid #ff7a1a !important;
+}
+
+/* ── Dividers ─────────────────────────────────────────── */
+hr {
+  border-color: #34363b !important;
+  opacity: 1 !important;
+}
+
+/* ── "Powered by BTCPAY" footer ───────────────────────── */
+.store-footer,
+.powered-by,
+footer,
+.text-center.small {
+  color: #8a8d93 !important;
+}
+.store-footer a,
+.powered-by a,
+footer a {
+  color: #ff7a1a !important;
+}
+
+/* ── Language selector ────────────────────────────────── */
+.lang-selector,
+select,
+.dropdown-toggle {
+  background-color: #1f2023 !important;
+  border: 1px solid #34363b !important;
+  color: #8a8d93 !important;
+  border-radius: 4px !important;
+}
+
+/* ── Demo banner (demo.btcpayserver.org only) ─────────── */
+.alert-warning {
+  background-color: rgba(255, 122, 26, 0.1) !important;
+  border-color: rgba(255, 122, 26, 0.3) !important;
+  color: #ffa54d !important;
+}
+
+/* ── Focus ring ───────────────────────────────────────── */
+*:focus-visible {
+  outline: 2px solid #ff7a1a !important;
+  outline-offset: 2px !important;
+}
+
+/* ── Text selection ───────────────────────────────────── */
+::selection {
+  background: #ff7a1a !important;
+  color: #16171a !important;
+}

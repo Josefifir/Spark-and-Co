@@ -6,6 +6,8 @@ import { CustomerAuthProvider } from "@/lib/auth/CustomerAuthContext";
 import Header from "@/components/shop/Header";
 import Footer from "@/components/shop/Footer";
 import CookieConsent from "@/components/shop/CookieConsent";
+import SocialProofPopup from "@/components/shop/SocialProofPopup";
+import AbandonedCartTracker from "@/components/shop/AbandonedCartTracker";
 
 export default function ShopLayout({ children }) {
   return (
@@ -18,6 +20,8 @@ export default function ShopLayout({ children }) {
               <main className="flex-1">{children}</main>
               <Footer />
               <CookieConsent />
+              <SocialProofPopup />
+              <AbandonedCartTracker />
             </AgeGate>
           </CustomerAuthProvider>
         </CartProvider>
