@@ -300,7 +300,7 @@ export async function POST(request) {
   const session = await getCustomerSession();
 
   // ── Fraud scoring (before order is created) ──────────────────────────────
-  const ip = getClientIp(request);
+  // `ip` is already declared at the top of this function for rate-limiting
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const recentOrderCount = await Order.countDocuments({
     customerEmail: body.customerEmail.toLowerCase(),
