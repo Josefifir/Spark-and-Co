@@ -8,8 +8,8 @@ const isDev = process.env.NODE_ENV !== "production";
 const btcpayHost = process.env.BTCPAY_HOST ?? "";
 
 const scriptSrc = isDev
-  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://storage.googleapis.com"
-  : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://storage.googleapis.com";
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.stripe.com https://storage.googleapis.com"
+  : "script-src 'self' 'unsafe-inline' https://*.stripe.com https://storage.googleapis.com";
 
 // In dev allow http: images so localhost-served uploads (and any absolute URLs
 // still in the DB) are not blocked. In production only https: is permitted.
@@ -21,12 +21,12 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   imgSrc,
   "font-src 'self' data:",
-  `connect-src 'self' https://api.stripe.com${btcpayHost ? ` ${btcpayHost}` : ""}`,
-  `frame-src 'self' https://js.stripe.com https://hooks.stripe.com${btcpayHost ? ` ${btcpayHost}` : ""}`,
+  `connect-src 'self' https://*.stripe.com https://*.stripe.network${btcpayHost ? ` ${btcpayHost}` : ""}`,
+  `frame-src 'self' https://*.stripe.com https://*.stripe.network${btcpayHost ? ` ${btcpayHost}` : ""}`,
   "worker-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
-  "form-action 'self'",
+  "form-action 'self' https://*.stripe.com",
   "frame-ancestors 'none'",
 ].join("; ");
 
