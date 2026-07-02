@@ -6,7 +6,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "display_override": ["standalone", "minimal-ui", "browser"],
+  "display_override": ["tabbed", "window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
   "background_color": "#0a0a0a",
   "theme_color": "#0a0a0a",
@@ -84,5 +84,51 @@
       "title": "q",
       "text": "q"
     }
+  },
+  "protocol_handlers": [
+    {
+      "protocol": "web+strike",
+      "url": "/products?q=%s"
+    }
+  ],
+  "file_handlers": [
+    {
+      "action": "/",
+      "accept": {
+        "image/*": [".png", ".jpg", ".jpeg", ".webp"]
+      }
+    }
+  ],
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+  "widgets": [
+    {
+      "name": "Strike & Co. Shop",
+      "description": "Quick access to the Strike & Co. shop",
+      "tag": "strike-shop",
+      "template": "shopping-list",
+      "ms_ac_template": "/widgets/shop-widget.json",
+      "data": "/widgets/shop-data.json",
+      "type": "application/json",
+      "screenshots": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192",
+          "label": "Strike shop widget"
+        }
+      ],
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ],
+      "auth": false,
+      "update": 86400
+    }
+  ],
+  "note_taking": {
+    "new_note_url": "/account"
   }
 }
