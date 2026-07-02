@@ -71,14 +71,41 @@ export default function StripePaymentForm({ clientSecret, orderNumber, onSuccess
       theme: "night",
       variables: {
         colorPrimary: "#ff7a1a",
-        colorBackground: "#1f2023",
+        colorBackground: "#111213",
         colorText: "#edeae3",
+        colorTextSecondary: "#8b8b8b",
         colorDanger: "#e5484d",
-        fontFamily: "Inter, sans-serif",
+        fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif",
         borderRadius: "2px",
+        spacingUnit: "4px",
+      },
+      rules: {
+        ".Input": {
+          backgroundColor: "#1a1b1e",
+          border: "1px solid #2e2e2e",
+          color: "#edeae3",
+          fontSize: "16px", // prevents iOS auto-zoom on focus
+        },
+        ".Input:focus": {
+          border: "1px solid #ff7a1a",
+          boxShadow: "none",
+        },
+        ".Label": {
+          color: "#8b8b8b",
+          fontSize: "12px",
+        },
+        ".Tab": {
+          backgroundColor: "#1a1b1e",
+          border: "1px solid #2e2e2e",
+          color: "#8b8b8b",
+        },
+        ".Tab--selected": {
+          backgroundColor: "#1a1b1e",
+          border: "1px solid #ff7a1a",
+          color: "#edeae3",
+        },
       },
     },
-    // Configure payment element based on payment method
     ...(paymentMethod === "sepa" && {
       paymentMethodOrder: ["sepa_debit"],
     }),
