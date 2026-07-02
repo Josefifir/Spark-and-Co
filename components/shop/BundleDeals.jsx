@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Package, Plus } from "lucide-react";
+import Button from "@/components/ui/Button";
 import { useCart } from "@/components/shop/CartContext";
 import { useCurrency } from "@/lib/currency/CurrencyContext";
 import { toast } from "sonner";
@@ -92,13 +93,10 @@ export default function BundleDeals() {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => addBundleToCart(bundle)}
-                  className="w-full flex items-center justify-center gap-2 bg-flame text-graphite font-medium rounded-sm py-2.5 hover:bg-flame-bright transition-colors text-sm"
-                >
+                <Button onClick={() => addBundleToCart(bundle)} className="w-full">
                   <Plus className="w-4 h-4" />
                   Add bundle to cart
-                </button>
+                </Button>
               </div>
             </div>
           ))}

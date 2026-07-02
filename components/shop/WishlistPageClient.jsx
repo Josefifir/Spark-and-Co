@@ -72,7 +72,7 @@ export default function WishlistPageClient() {
                   {product.stock > 0 && (
                     <button
                       onClick={() => { addItem(product, 1); toast.success(`${product.name} added to cart`); }}
-                      className="p-2 rounded-sm border border-hairline hover:border-flame hover:text-flame text-steel transition-colors"
+                      className="h-9 w-9 flex items-center justify-center rounded-sm border border-hairline hover:border-flame hover:text-flame text-steel transition-colors"
                       aria-label="Add to cart"
                     >
                       <ShoppingBag className="w-4 h-4" />
@@ -80,7 +80,7 @@ export default function WishlistPageClient() {
                   )}
                   <button
                     onClick={() => remove(product._id)}
-                    className="p-2 rounded-sm border border-hairline hover:border-danger hover:text-danger text-steel transition-colors"
+                    className="h-9 w-9 flex items-center justify-center rounded-sm border border-hairline hover:border-danger hover:text-danger text-steel transition-colors"
                     aria-label="Remove"
                   >
                     <Heart className="w-4 h-4 fill-current" />

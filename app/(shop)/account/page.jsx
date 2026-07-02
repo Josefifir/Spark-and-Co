@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Button from "@/components/ui/Button";
 
 export default function AccountProfilePage() {
   const router = useRouter();
@@ -104,12 +105,9 @@ export default function AccountProfilePage() {
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 sm:gap-4">
           <h2 className="text-xl sm:text-2xl font-bold text-paper">Profile Information</h2>
           {!editing && (
-            <button
-              onClick={() => setEditing(true)}
-              className="w-full sm:w-auto px-4 py-2 bg-flame text-graphite rounded-md hover:bg-flame-bright transition-colors font-medium text-sm sm:text-base"
-            >
+            <Button onClick={() => setEditing(true)} className="w-full sm:w-auto">
               Edit Profile
-            </button>
+            </Button>
           )}
         </div>
       </div>
@@ -246,21 +244,12 @@ export default function AccountProfilePage() {
             </label>
           </div>
           <div className="flex gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={saving}
-              className="px-6 py-2 bg-flame text-graphite font-medium rounded-md hover:bg-flame-bright transition-colors disabled:opacity-50"
-            >
+            <Button type="submit" disabled={saving}>
               {saving ? "Saving..." : "Save Changes"}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              disabled={saving}
-              className="px-6 py-2 bg-panel-raised text-paper-dim rounded-md hover:bg-hairline transition-colors disabled:opacity-50"
-            >
+            </Button>
+            <Button type="button" variant="secondary" onClick={handleCancel} disabled={saving}>
               Cancel
-            </button>
+            </Button>
           </div>
         </form>
       )}

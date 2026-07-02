@@ -52,7 +52,7 @@ export default function CartUpsell({ cartItems }) {
                   }
                 }}
                 disabled={inCart}
-                className="flex items-center gap-1 text-xs border border-hairline rounded-sm px-2.5 py-1.5 text-paper-dim hover:border-flame hover:text-flame transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
+                className="h-9 flex items-center gap-1 text-xs border border-hairline rounded-sm px-3 text-paper-dim hover:border-flame hover:text-flame transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" /> {inCart ? "In cart" : "Add"}
               </button>

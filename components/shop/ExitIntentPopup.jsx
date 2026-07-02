@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Button from "@/components/ui/Button";
 
 export default function ExitIntentPopup() {
   const [visible, setVisible] = useState(false);
@@ -56,18 +57,12 @@ export default function ExitIntentPopup() {
           Use code <strong className="text-flame">STAY10</strong> at checkout for 10% off your order. One use only.
         </p>
         <div className="flex gap-3">
-          <button
-            onClick={handleUseCode}
-            className="flex-1 bg-flame text-graphite font-semibold py-3 rounded-sm hover:bg-flame-bright transition-colors text-sm"
-          >
+          <Button onClick={handleUseCode} className="flex-1">
             Copy code &amp; continue
-          </button>
-          <button
-            onClick={handleDismiss}
-            className="px-4 py-3 border border-hairline text-steel text-sm rounded-sm hover:text-paper hover:border-steel transition-colors"
-          >
+          </Button>
+          <Button variant="secondary" onClick={handleDismiss}>
             No thanks
-          </button>
+          </Button>
         </div>
       </div>
     </div>

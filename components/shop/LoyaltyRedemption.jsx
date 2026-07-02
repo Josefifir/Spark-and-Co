@@ -41,7 +41,7 @@ export default function LoyaltyRedemption({ subtotalCents, onRedeem }) {
         <button
           type="button"
           onClick={toggle}
-          className={`text-xs font-medium px-3 py-1.5 rounded-sm border transition-colors shrink-0 ${
+          className={`h-9 px-3 text-xs font-medium rounded-sm border transition-colors shrink-0 ${
             using
               ? "border-flame bg-flame/10 text-flame"
               : "border-hairline text-steel hover:text-paper hover:border-steel"

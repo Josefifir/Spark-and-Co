@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import PhoneInput from "@/components/ui/PhoneInput";
+import Button from "@/components/ui/Button";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -161,13 +162,9 @@ export default function LoginPage() {
                 placeholder="••••••••"
               />
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 px-4 bg-flame text-graphite font-medium rounded-md hover:bg-flame-bright transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Signing in..." : "Sign in"}
-            </button>
+            </Button>
           </form>
         ) : (
           <form onSubmit={handleRegister} className="space-y-4">
@@ -256,13 +253,9 @@ export default function LoginPage() {
                 Subscribe to marketing emails
               </label>
             </div>
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2 px-4 bg-flame text-graphite font-medium rounded-md hover:bg-flame-bright transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm"
-            >
+            <Button type="submit" disabled={loading} className="w-full">
               {loading ? "Creating account..." : "Create account"}
-            </button>
+            </Button>
           </form>
         )}
 

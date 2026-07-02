@@ -126,10 +126,10 @@ export default function CartPage() {
                   <div className={`flex items-center rounded-sm border ${stockErrors[item.productId] ? 'border-danger' : 'border-hairline'}`}>
                     <button
                       onClick={() => { updateQuantity(item.productId, item.quantity - 1); setStockErrors(e => ({ ...e, [item.productId]: null })); }}
-                      className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                      className="w-9 h-9 flex items-center justify-center text-paper-dim hover:text-paper"
                       aria-label={t('cart.decreaseQuantity')}
                     >
-                      <Minus className="w-3 h-3" />
+                      <Minus className="w-3.5 h-3.5" />
                     </button>
                     <input
                       type="number"
@@ -157,10 +157,10 @@ export default function CartPage() {
                           updateQuantity(item.productId, item.quantity + 1);
                         }
                       }}
-                      className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                      className="w-9 h-9 flex items-center justify-center text-paper-dim hover:text-paper"
                       aria-label={t('cart.increaseQuantity')}
                     >
-                      <Plus className="w-3 h-3" />
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
                   <span className="font-mono-tech text-sm text-paper ml-auto">
@@ -178,10 +178,10 @@ export default function CartPage() {
               <div className={`flex items-center rounded-sm border ${stockErrors[item.productId] ? 'border-danger' : 'border-hairline'}`}>
                 <button
                   onClick={() => { updateQuantity(item.productId, item.quantity - 1); setStockErrors(e => ({ ...e, [item.productId]: null })); }}
-                  className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                  className="w-9 h-9 flex items-center justify-center text-paper-dim hover:text-paper"
                   aria-label={t('cart.decreaseQuantity')}
                 >
-                  <Minus className="w-3 h-3" />
+                  <Minus className="w-3.5 h-3.5" />
                 </button>
                 <input
                   type="number"
@@ -209,10 +209,10 @@ export default function CartPage() {
                       updateQuantity(item.productId, item.quantity + 1);
                     }
                   }}
-                  className="w-8 h-8 flex items-center justify-center text-paper-dim hover:text-paper"
+                  className="w-9 h-9 flex items-center justify-center text-paper-dim hover:text-paper"
                   aria-label={t('cart.increaseQuantity')}
                 >
-                  <Plus className="w-3 h-3" />
+                  <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
               {stockErrors[item.productId] && (
