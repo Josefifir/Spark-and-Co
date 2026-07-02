@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.vercel.spark_and_co.twa",
+    "sha256_cert_fingerprints": ["A6:6C:27:55:AD:46:DA:EA:85:E4:2F:49:98:F5:C7:37:36:EE:2D:9F:32:18:B5:BE:55:54:9C:48:8B:A3:E1:9C"]
+  }
+}]
