@@ -75,7 +75,7 @@ export function CompareButton({ product }) {
     <button
       type="button"
       onClick={() => inList ? remove(product._id) : add(product)}
-      className={`text-xs px-2 py-1 border rounded-sm transition-colors ${
+      className={`h-9 px-3 text-xs border rounded-sm transition-colors ${
         inList
           ? "border-flame text-flame bg-flame/5"
           : "border-hairline text-steel hover:border-steel hover:text-paper"

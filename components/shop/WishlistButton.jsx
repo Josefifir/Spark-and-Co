@@ -47,7 +47,7 @@ export default function WishlistButton({ productId, className = "" }) {
       onClick={toggle}
       disabled={loading}
       aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-      className={`p-2 rounded-sm border border-hairline hover:border-steel transition-colors ${className}`}
+      className={`h-9 w-9 flex items-center justify-center rounded-sm border border-hairline hover:border-steel transition-colors ${className}`}
     >
       <Heart
         className={`w-4 h-4 transition-colors ${wishlisted ? "fill-flame text-flame" : "text-steel"}`}
