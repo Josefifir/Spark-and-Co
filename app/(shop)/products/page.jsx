@@ -6,6 +6,29 @@ import ProductsListClient from "@/components/shop/ProductsListClient";
 // Revalidate every 60 s — category filters are stable enough for short-lived caching.
 export const revalidate = 60;
 
+const SITE_URL = process.env.NEXT_PUBLIC_BASE_URL || "https://spark-and-co.vercel.app";
+
+export async function generateMetadata({ searchParams }) {
+  const params = await searchParams;
+  const category = params?.category || "";
+  const title = category
+    ? `${category.charAt(0).toUpperCase() + category.slice(1)} Lighters`
+    : "All Products";
+  const description = category
+    ? `Browse our range of ${category} lighters and accessories at Spark & Co.`
+    : "Browse our full range of precision lighters and EDC accessories at Spark & Co.";
+  const url = category
+    ? `${SITE_URL}/products?category=${encodeURIComponent(category)}`
+    : `${SITE_URL}/products`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: url },
+    openGraph: { url, title, description },
+  };
+}
+
 async function getProducts(category) {
   await dbConnect();
   const filter = { isActive: true };
