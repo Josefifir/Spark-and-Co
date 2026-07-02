@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { X, ChevronRight } from "lucide-react";
@@ -9,38 +9,63 @@ import { useCurrency } from "@/lib/currency/CurrencyContext";
 const COMPARE_KEY = "compare-products";
 const MAX_COMPARE = 3;
 
-export function useCompare() {
+// ── Shared context ────────────────────────────────────────────────────────────
+
+const CompareContext = createContext(null);
+
+export function CompareProvider({ children }) {
   const [items, setItems] = useState([]);
 
+  // Hydrate from localStorage once on mount
   useEffect(() => {
     try { setItems(JSON.parse(localStorage.getItem(COMPARE_KEY) || "[]")); } catch {}
   }, []);
 
-  const add = (product) => {
+  const add = useCallback((product) => {
     setItems((prev) => {
       if (prev.find((p) => p._id === product._id)) return prev;
-      if (prev.length >= MAX_COMPARE) { return prev; }
-      const next = [...prev, { _id: product._id, name: product.name, slug: product.slug, priceCents: product.priceCents, images: product.images, specs: product.specs, category: product.category }];
+      if (prev.length >= MAX_COMPARE) return prev;
+      const next = [...prev, {
+        _id: product._id,
+        name: product.name,
+        slug: product.slug,
+        priceCents: product.priceCents,
+        images: product.images,
+        specs: product.specs,
+        category: product.category,
+      }];
       localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
       return next;
     });
-  };
+  }, []);
 
-  const remove = (id) => {
+  const remove = useCallback((id) => {
     setItems((prev) => {
       const next = prev.filter((p) => p._id !== id);
       localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
       return next;
     });
-  };
+  }, []);
 
-  const clear = () => {
+  const clear = useCallback(() => {
     setItems([]);
     localStorage.removeItem(COMPARE_KEY);
-  };
+  }, []);
 
-  return { items, add, remove, clear };
+  return (
+    <CompareContext.Provider value={{ items, add, remove, clear }}>
+      {children}
+    </CompareContext.Provider>
+  );
 }
+
+function useCompare() {
+  const ctx = useContext(CompareContext);
+  if (!ctx) throw new Error("useCompare must be used inside CompareProvider");
+  return ctx;
+}
+
+// ── Public components ─────────────────────────────────────────────────────────
 
 export function CompareButton({ product }) {
   const { items, add, remove } = useCompare();
@@ -51,7 +76,9 @@ export function CompareButton({ product }) {
       type="button"
       onClick={() => inList ? remove(product._id) : add(product)}
       className={`text-xs px-2 py-1 border rounded-sm transition-colors ${
-        inList ? "border-flame text-flame bg-flame/5" : "border-hairline text-steel hover:border-steel hover:text-paper"
+        inList
+          ? "border-flame text-flame bg-flame/5"
+          : "border-hairline text-steel hover:border-steel hover:text-paper"
       }`}
     >
       {inList ? "✓ Comparing" : "+ Compare"}
@@ -66,7 +93,6 @@ export function CompareBar() {
 
   if (items.length < 2) return null;
 
-  // Collect all unique spec keys across compared products
   const specKeys = [...new Set(items.flatMap((p) => (p.specs || []).map((s) => s.label)))];
 
   return (
@@ -78,7 +104,9 @@ export function CompareBar() {
           {items.map((p) => (
             <div key={p._id} className="flex items-center gap-1.5 bg-panel-raised border border-hairline rounded-sm px-2 py-1">
               <span className="text-xs text-paper truncate max-w-[120px]">{p.name}</span>
-              <button onClick={() => remove(p._id)} className="text-steel hover:text-paper"><X className="w-3 h-3" /></button>
+              <button onClick={() => remove(p._id)} className="text-steel hover:text-paper">
+                <X className="w-3 h-3" />
+              </button>
             </div>
           ))}
           <button
@@ -97,7 +125,9 @@ export function CompareBar() {
           <div className="max-w-4xl mx-auto bg-panel border border-hairline rounded-sm">
             <div className="flex items-center justify-between p-5 border-b border-hairline">
               <h2 className="font-display text-xl font-bold text-paper">Product comparison</h2>
-              <button onClick={() => setModalOpen(false)} className="text-steel hover:text-paper"><X className="w-5 h-5" /></button>
+              <button onClick={() => setModalOpen(false)} className="text-steel hover:text-paper">
+                <X className="w-5 h-5" />
+              </button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -107,9 +137,13 @@ export function CompareBar() {
                     {items.map((p) => (
                       <th key={p._id} className="p-4 text-left">
                         <div className="w-24 h-24 bg-panel-raised border border-hairline rounded-sm overflow-hidden relative mb-2">
-                          {p.images?.[0] && <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="96px" />}
+                          {p.images?.[0] && (
+                            <Image src={p.images[0]} alt={p.name} fill className="object-cover" sizes="96px" />
+                          )}
                         </div>
-                        <Link href={`/products/${p.slug}`} className="text-paper font-medium hover:text-flame transition-colors block">{p.name}</Link>
+                        <Link href={`/products/${p.slug}`} className="text-paper font-medium hover:text-flame transition-colors block">
+                          {p.name}
+                        </Link>
                         <p className="font-mono-tech text-flame mt-1">{formatPrice(p.priceCents)}</p>
                       </th>
                     ))}
@@ -118,7 +152,9 @@ export function CompareBar() {
                 <tbody>
                   <tr className="border-t border-hairline">
                     <td className="p-4 text-xs font-mono-tech text-steel uppercase">Category</td>
-                    {items.map((p) => <td key={p._id} className="p-4 text-paper-dim">{p.category}</td>)}
+                    {items.map((p) => (
+                      <td key={p._id} className="p-4 text-paper-dim">{p.category}</td>
+                    ))}
                   </tr>
                   {specKeys.map((key) => (
                     <tr key={key} className="border-t border-hairline">

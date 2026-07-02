@@ -9,7 +9,7 @@ import CookieConsent from "@/components/shop/CookieConsent";
 import SocialProofPopup from "@/components/shop/SocialProofPopup";
 import AbandonedCartTracker from "@/components/shop/AbandonedCartTracker";
 import ExitIntentPopup from "@/components/shop/ExitIntentPopup";
-import { CompareBar } from "@/components/shop/ProductCompare";
+import { CompareProvider, CompareBar } from "@/components/shop/ProductCompare";
 
 export default function ShopLayout({ children }) {
   return (
@@ -18,14 +18,16 @@ export default function ShopLayout({ children }) {
         <CartProvider>
           <CustomerAuthProvider>
             <AgeGate>
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-              <CookieConsent />
-              <SocialProofPopup />
-              <AbandonedCartTracker />
-              <ExitIntentPopup />
-              <CompareBar />
+              <CompareProvider>
+                <Header />
+                <main className="flex-1">{children}</main>
+                <Footer />
+                <CookieConsent />
+                <SocialProofPopup />
+                <AbandonedCartTracker />
+                <ExitIntentPopup />
+                <CompareBar />
+              </CompareProvider>
             </AgeGate>
           </CustomerAuthProvider>
         </CartProvider>
