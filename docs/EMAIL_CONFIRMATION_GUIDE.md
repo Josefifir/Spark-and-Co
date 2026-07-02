@@ -175,14 +175,14 @@ case "payment_intent.succeeded": {
 }
 ```
 
-### Coinbase Webhook
+### BTCPay Server Webhook
 
-**File**: `app/api/webhooks/coinbase/route.js`
+**File**: `app/api/webhooks/btcpayserver/route.js`
 
 ```javascript
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 
-case "charge:confirmed":
+case "InvoiceSettled":
   if (order.paymentStatus !== "paid") {
     order.paymentStatus = "paid";
     order.fulfillmentStatus = "processing";

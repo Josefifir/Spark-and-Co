@@ -1,15 +1,15 @@
-# Strike & Co. — Lighter Shop
+# Spark & Co. — Lighter Shop
 
 A full-stack Next.js e-commerce site for selling lighters, with a secured admin
 dashboard, MongoDB (NoSQL) storage, and encrypted payments via **Stripe**
-(cards) and **Coinbase Commerce** (Bitcoin).
+(cards, SEPA, Revolut Pay) and **BTCPay Server** (Bitcoin).
 
 ## Stack
 
 - **Framework:** Next.js 16 (App Router, Server Components, Route Handlers)
-- **Database:** MongoDB via Mongoose
-- **Payments:** Stripe (cards, PCI-compliant Elements) + Coinbase Commerce (Bitcoin)
-- **Auth:** Custom JWT sessions in httpOnly cookies, bcrypt password hashing
+- **Database:** MongoDB via Mongoose, Redis for caching / sessions
+- **Payments:** Stripe (cards, SEPA Direct Debit, Revolut Pay) + BTCPay Server (Bitcoin)
+- **Auth:** Custom JWT sessions in httpOnly cookies, bcrypt password hashing, TOTP 2FA for admins
 - **Styling:** Tailwind CSS v4
 
 ## 1. Prerequisites
@@ -19,7 +19,7 @@ dashboard, MongoDB (NoSQL) storage, and encrypted payments via **Stripe**
   - [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) free tier (recommended, no local install)
   - Or install MongoDB Community Server locally
 - A [Stripe](https://dashboard.stripe.com/register) account (test mode is fine to start)
-- A [Coinbase Commerce](https://commerce.coinbase.com/) account for Bitcoin payments
+- A [BTCPay Server](https://btcpayserver.org/) instance for Bitcoin payments (self-hosted or via a third-party host)
 
 ## 2. Setup
 
@@ -38,8 +38,10 @@ Edit `.env.local`:
 | `STRIPE_SECRET_KEY` / `STRIPE_PUBLISHABLE_KEY` | Stripe Dashboard → Developers → API keys |
 | `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Same publishable key, exposed to the browser |
 | `STRIPE_WEBHOOK_SECRET` | Created when you set up the webhook (step 4) |
-| `COINBASE_COMMERCE_API_KEY` | Coinbase Commerce → Settings → API keys |
-| `COINBASE_COMMERCE_WEBHOOK_SECRET` | Coinbase Commerce → Settings → Webhook subscriptions |
+| `BTCPAY_HOST` | Full URL of your BTCPay Server instance, e.g. `https://btcpay.yourdomain.com` |
+| `BTCPAY_API_KEY` | BTCPay Server → Account → API keys → Generate key (grant `btcpay.store.invoices.create`) |
+| `BTCPAY_STORE_ID` | BTCPay Server → Store Settings → General (shown at the top) |
+| `BTCPAY_WEBHOOK_SECRET` | Generated when you add a webhook in BTCPay Server → Store Settings → Webhooks |
 
 ## 3. Seed your database
 
@@ -62,10 +64,11 @@ stripe listen --forward-to localhost:3000/api/webhooks/stripe
 
 Copy the `whsec_...` it prints into `STRIPE_WEBHOOK_SECRET`.
 
-**Coinbase Commerce**: in their dashboard, add a webhook endpoint pointing to
-`https://<your-domain>/api/webhooks/coinbase` (use a tool like `ngrok` to test
-locally, since Coinbase can't reach `localhost`). Copy the shared secret into
-`COINBASE_COMMERCE_WEBHOOK_SECRET`.
+**BTCPay Server**: in your store, go to **Store Settings → Webhooks → Create Webhook**.
+Set the payload URL to `https://<your-domain>/api/webhooks/btcpayserver` and enable
+the `InvoiceSettled`, `InvoiceExpired`, `InvoiceInvalid`, `InvoiceReceivedPayment`,
+and `InvoiceProcessing` events. Copy the secret into `BTCPAY_WEBHOOK_SECRET`.
+For local development use a tunnelling tool such as `ngrok` so BTCPay can reach your machine.
 
 ## 5. Run it
 
@@ -81,10 +84,10 @@ npm run dev
 - **No card data ever touches our server** — Stripe Elements collects card
   details directly in the browser and tokenizes them; our backend only ever
   sees a `PaymentIntent` ID.
-- **No private keys stored** — Bitcoin payments are handled entirely by
-  Coinbase Commerce's hosted checkout; we only store their charge ID.
-- **Webhook signature verification** on both Stripe and Coinbase Commerce
-  webhooks, using constant-time comparison for the Coinbase HMAC check.
+- **No private keys stored** — Bitcoin payments redirect to BTCPay Server's
+  hosted invoice page; we only store the invoice ID.
+- **Webhook signature verification** on both Stripe (`stripe-signature`) and
+  BTCPay Server (`BTCPay-Sig`) webhooks, using constant-time HMAC comparison.
 - **Server-side price/stock validation** — the checkout API never trusts
   prices sent from the browser; it always re-reads them from MongoDB.
 - **Admin auth**: bcrypt-hashed passwords (cost factor 12), JWT sessions in
@@ -107,15 +110,15 @@ npm run dev
    some places, torch/novelty lighters specifically are restricted or banned)
    in many jurisdictions. The site includes a basic age-gate, but you are
    responsible for confirming:
-   - Stripe's and Coinbase Commerce's acceptable-use/prohibited-business
-     policies permit your specific products
+   - Stripe's acceptable-use / prohibited-business policies permit your
+     specific products
    - Any state/national age-verification or shipping requirements (e.g. some
      regions require adult-signature delivery for lighters)
 3. **HTTPS in production** is required — cookies are set `secure: true`
    outside development, so the app will not maintain sessions over plain HTTP
    in production.
-4. **Switch Stripe/Coinbase to live keys** once you've tested fully in test
-   mode.
+4. **Switch Stripe to live keys** once you've tested fully in test mode.
+   Point `BTCPAY_HOST` at your production BTCPay Server instance.
 5. Consider swapping the in-memory rate limiter (`lib/rateLimit.js`) for a
    Redis-backed one if you deploy more than one server instance — the current
    one is per-instance memory and resets on restart.
@@ -140,7 +143,7 @@ app/
     orders/[orderNumber]/  # public order status lookup
     webhooks/
       stripe/          # signature-verified Stripe webhook
-      coinbase/        # signature-verified Coinbase Commerce webhook
+      btcpayserver/    # signature-verified BTCPay Server webhook
     admin/              # all protected by requireAdmin()
       login/ logout/ me/
       products/ orders/ stats/
@@ -148,7 +151,7 @@ lib/
   db.js                # MongoDB connection (cached across hot reloads)
   models/              # Product, Order, AdminUser (Mongoose schemas)
   auth/                # session signing/verification, requireAdmin wrapper
-  payments/            # Stripe + Coinbase Commerce clients, webhook verification
+  payments/            # Stripe + BTCPay Server clients, webhook verification
   rateLimit.js
   utils-shop.js
 components/

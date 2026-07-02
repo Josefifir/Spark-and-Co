@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 // Content-Security-Policy allows Stripe.js/Elements (required for embedded card
-// fields) and Coinbase Commerce's hosted checkout redirect. In development
+// fields) and BTCPay Server's hosted checkout redirect. In development
 // we enable 'unsafe-eval' so React's dev tools and error overlays can work.
 // Remove 'unsafe-eval' in production for security.
 const isDev = process.env.NODE_ENV !== "production";
@@ -19,7 +19,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   imgSrc,
   "font-src 'self' data:",
-  "connect-src 'self' https://api.stripe.com https://api.commerce.coinbase.com",
+  "connect-src 'self' https://api.stripe.com",
   "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
   "object-src 'none'",
   "base-uri 'self'",

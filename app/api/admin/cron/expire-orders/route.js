@@ -15,7 +15,7 @@ export async function POST(request) {
 
   await dbConnect();
 
-  // Find all pending orders older than 2 hours that have a Stripe or Coinbase reference
+  // Find all pending orders older than 2 hours that have a Stripe or BTCPay reference
   const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000);
   const staleOrders = await Order.find({
     paymentStatus: "pending",

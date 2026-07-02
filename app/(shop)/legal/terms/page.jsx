@@ -44,10 +44,10 @@ export default function TermsPage() {
           <ul className="list-disc list-inside space-y-1.5 ml-2">
             <li>Credit/Debit Cards (Visa, Mastercard, American Express)</li>
             <li>Revolut Pay</li>
-            <li>Cryptocurrency (Bitcoin via Coinbase Commerce)</li>
+            <li>Cryptocurrency (Bitcoin via BTCPay Server)</li>
             <li>SEPA Direct Debit (EU customers only)</li>
           </ul>
-          <p className="mt-3">Payment is due immediately upon placing your order. We use secure payment processors (Stripe and Coinbase Commerce) and do not store your payment card details on our servers.</p>
+          <p className="mt-3">Payment is due immediately upon placing your order. We use secure payment processors (Stripe and BTCPay Server) and do not store your payment card details on our servers.</p>
         </section>
 
         <section>

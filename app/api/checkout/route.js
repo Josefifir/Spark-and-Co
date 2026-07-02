@@ -5,7 +5,7 @@ import Product from "@/lib/models/Product";
 import Order from "@/lib/models/Order";
 import ShippingZone from "@/lib/models/ShippingZone";
 import { stripe } from "@/lib/payments/stripe";
-import { createCoinbaseCharge } from "@/lib/payments/coinbase";
+import { createBtcpayInvoice } from "@/lib/payments/btcpayserver";
 import { generateOrderNumber } from "@/lib/utils-shop";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 import { validateDiscountCode, incrementDiscountCodeUsage, calculateBulkPrice } from "@/lib/utils-pricing";
@@ -359,19 +359,15 @@ export async function POST(request) {
     }
 
     if (body.paymentMethod === "bitcoin") {
-      // Coinbase Commerce: convert to USD if needed (they primarily work in USD/crypto)
-      const coinbaseAmountCents = orderCurrency === 'USD' ? finalTotalCents : totalCents;
-      
-      const charge = await createCoinbaseCharge({
-        name: `Order ${orderNumber}`,
-        description: `${orderItems.length} item(s) from Lighter Shop`,
-        amountCents: coinbaseAmountCents,
-        currency: "usd", // Coinbase Commerce works best with USD
+      const invoice = await createBtcpayInvoice({
         orderNumber,
+        amountCents: finalTotalCents,
+        currency: orderCurrency,
+        customerEmail: body.customerEmail,
+        redirectUrl: `${process.env.NEXT_PUBLIC_BASE_URL}/checkout/success?order=${orderNumber}`,
       });
 
-      order.coinbaseChargeId = charge.id;
-      order.coinbaseChargeCode = charge.code;
+      order.btcpayInvoiceId = invoice.id;
       await order.save();
 
       // Increment discount code usage after successful payment setup
@@ -382,7 +378,7 @@ export async function POST(request) {
       return NextResponse.json({
         orderNumber,
         paymentMethod: "bitcoin",
-        hostedUrl: charge.hosted_url,
+        hostedUrl: invoice.checkoutLink,
         currency: orderCurrency,
       });
     }

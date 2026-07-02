@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { verifyCoinbaseWebhookSignature } from "@/lib/payments/verifyCoinbaseWebhook";
+import { verifyBtcpayWebhookSignature } from "@/lib/payments/verifyBtcpayWebhook";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
@@ -10,13 +10,13 @@ export const runtime = "nodejs";
 
 export async function POST(request) {
   const rawBody = await request.text();
-  const signature = request.headers.get("x-cc-webhook-signature");
+  const signature = request.headers.get("btcpay-sig");
 
   let valid;
   try {
-    valid = verifyCoinbaseWebhookSignature(rawBody, signature);
+    valid = verifyBtcpayWebhookSignature(rawBody, signature);
   } catch (err) {
-    console.error("Coinbase webhook verification error:", err.message);
+    console.error("BTCPay webhook verification error:", err.message);
     return NextResponse.json({ error: "Webhook not configured" }, { status: 500 });
   }
 
@@ -27,21 +27,23 @@ export async function POST(request) {
   const event = JSON.parse(rawBody);
   await dbConnect();
 
-  const chargeId = event.event?.data?.id;
-  const eventType = event.event?.type;
+  // BTCPay Greenfield webhook payload shape:
+  // { type: "InvoiceSettled" | "InvoiceExpired" | ..., invoiceId: "...", metadata: { orderNumber } }
+  const invoiceId = event.invoiceId;
+  const eventType = event.type;
 
-  if (!chargeId) {
+  if (!invoiceId) {
     return NextResponse.json({ error: "Malformed event" }, { status: 400 });
   }
 
-  const order = await Order.findOne({ coinbaseChargeId: chargeId }).populate('items.product');
+  const order = await Order.findOne({ btcpayInvoiceId: invoiceId }).populate("items.product");
   if (!order) {
-    // Acknowledge so Coinbase doesn't retry forever, but nothing to do.
+    // Acknowledge so BTCPay doesn't retry forever, but nothing to do.
     return NextResponse.json({ received: true });
   }
 
   switch (eventType) {
-    case "charge:confirmed":
+    case "InvoiceSettled":
       if (order.paymentStatus !== "paid") {
         order.paymentStatus = "paid";
         order.fulfillmentStatus = "processing";
@@ -52,10 +54,9 @@ export async function POST(request) {
       }
       break;
 
-    case "charge:failed":
-    case "charge:resolved": {
-      // 'resolved' can mean it was settled after being underpaid/delayed - treat conservatively.
-      if (eventType === "charge:failed" && order.paymentStatus === "pending") {
+    case "InvoiceExpired":
+    case "InvoiceInvalid":
+      if (order.paymentStatus === "pending") {
         order.paymentStatus = "failed";
         await order.save();
         for (const item of order.items) {
@@ -63,13 +64,11 @@ export async function POST(request) {
         }
       }
       break;
-    }
 
-    case "charge:delayed":
-      // Payment detected on-chain but awaiting confirmations - keep as pending.
-      break;
-
-    case "charge:pending":
+    // InvoiceReceivedPayment / InvoiceProcessing — payment detected, awaiting confirmations
+    case "InvoiceReceivedPayment":
+    case "InvoiceProcessing":
+      // Keep as pending until fully settled
       break;
 
     default:

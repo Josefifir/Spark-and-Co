@@ -9,7 +9,7 @@ import { stripe } from "@/lib/payments/stripe";
  *
  * Returns the data needed to re-enter the payment flow for a pending order.
  * For Stripe: retrieves the existing PaymentIntent client_secret from Stripe.
- * For Bitcoin: returns the Coinbase hosted URL directly from the order.
+ * For Bitcoin: returns the BTCPay Server invoice checkout URL from the order.
  */
 export async function GET(_request, { params }) {
   const session = await getCustomerSession();
@@ -44,11 +44,13 @@ export async function GET(_request, { params }) {
     });
   }
 
-  // Bitcoin / Coinbase
-  if (order.coinbaseChargeCode) {
+  // Bitcoin / BTCPay Server
+  if (order.btcpayInvoiceId) {
+    const host = process.env.BTCPAY_HOST?.replace(/\/$/, "");
+    const storeId = process.env.BTCPAY_STORE_ID;
     return NextResponse.json({
       paymentMethod: "bitcoin",
-      hostedUrl: `https://commerce.coinbase.com/charges/${order.coinbaseChargeCode}`,
+      hostedUrl: `${host}/i/${order.btcpayInvoiceId}`,
       orderNumber: order.orderNumber,
     });
   }

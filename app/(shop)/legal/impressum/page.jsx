@@ -116,10 +116,9 @@ export default function ImpressumPage() {
               <a href="https://stripe.com" target="_blank" rel="noopener noreferrer" className="text-flame hover:underline">stripe.com</a>
             </div>
             <div className="bg-panel border border-hairline rounded-sm p-4 font-mono-tech text-sm text-paper space-y-0.5">
-              <p className="font-bold">Coinbase, Inc.</p>
-              <p>100 Pine Street, Suite 1250</p>
-              <p>San Francisco, CA 94111, USA</p>
-              <a href="https://commerce.coinbase.com" target="_blank" rel="noopener noreferrer" className="text-flame hover:underline">commerce.coinbase.com</a>
+              <p className="font-bold">BTCPay Server Foundation</p>
+              <p>Self-hosted, open-source Bitcoin payment processor</p>
+              <a href="https://btcpayserver.org" target="_blank" rel="noopener noreferrer" className="text-flame hover:underline">btcpayserver.org</a>
             </div>
           </div>
         </section>

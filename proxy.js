@@ -58,7 +58,7 @@ export function proxy(request) {
     const method = request.method;
     const isMutation = method === "POST" || method === "PUT" ||
                        method === "PATCH" || method === "DELETE";
-    // Webhooks must be excluded — Stripe/Coinbase POST without an Origin header
+    // Webhooks must be excluded — Stripe/BTCPay Server POST without an Origin header
     const isWebhook = pathname.startsWith("/api/webhooks/");
     if (!isWebhook && isMutation && origin && origin !== allowedOrigin) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
