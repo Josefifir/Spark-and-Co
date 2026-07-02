@@ -7,10 +7,11 @@ import { generateDiscountCode } from "@/lib/utils-shop";
 
 export const runtime = "nodejs";
 
-// Protect with CRON_SECRET
-export async function POST(request) {
+// Vercel Cron calls GET with Authorization: Bearer <CRON_SECRET>
+export async function GET(request) {
   const secret = process.env.CRON_SECRET;
-  if (!secret || request.headers.get("x-cron-secret") !== secret) {
+  const auth = request.headers.get("authorization");
+  if (!secret || auth !== `Bearer ${secret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
