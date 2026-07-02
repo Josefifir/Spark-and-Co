@@ -16,7 +16,7 @@ export default function AdminInventoryForecastPage() {
   }, []);
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
+    <div className="px-6 py-10">
       <div className="flex items-center gap-3 mb-8">
         <TrendingDown className="w-5 h-5 text-flame" />
         <h1 className="font-display text-2xl font-bold text-paper">Inventory Forecast</h1>

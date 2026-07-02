@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { 
-  Package, ShoppingCart, AlertTriangle, DollarSign, Users, 
+  Package, ShoppingCart, AlertTriangle, DollarSign, 
   TrendingUp, TrendingDown, Star, Tag, Globe, CreditCard 
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
@@ -97,7 +97,7 @@ export default function AdminDashboardPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-7xl">
+      <div className="p-8">
         <h1 className="font-display text-2xl font-bold text-paper mb-8">Dashboard</h1>
         <p className="text-paper-dim">Loading analytics...</p>
       </div>
@@ -106,7 +106,7 @@ export default function AdminDashboardPage() {
 
   if (!stats) {
     return (
-      <div className="p-8 max-w-7xl">
+      <div className="p-8">
         <h1 className="font-display text-2xl font-bold text-paper mb-8">Dashboard</h1>
         <p className="text-danger">Failed to load analytics</p>
       </div>
@@ -114,7 +114,7 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-8">
       <h1 className="font-display text-2xl font-bold text-paper mb-8">Dashboard</h1>
 
       {/* Overview Stats */}

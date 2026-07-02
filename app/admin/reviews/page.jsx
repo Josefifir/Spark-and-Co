@@ -5,7 +5,6 @@ import { csrfFetch } from "@/lib/auth/csrfFetch";
 import { useEffect, useState, useCallback } from "react";
 import { Check, X, Trash2, ChevronDown, Search, Filter, ChevronLeft, ChevronRight } from "lucide-react";
 import Button from "@/components/ui/Button";
-import Input from "@/components/ui/Input";
 import { toast } from "sonner";
 
 function StarRating({ rating }) {
@@ -417,7 +416,7 @@ export default function AdminReviewsPage() {
   const allSelected = reviews.length > 0 && selectedReviews.size === reviews.length;
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-3">
         <h1 className="font-display text-2xl font-bold text-paper">Product reviews</h1>
         <Button

@@ -93,7 +93,7 @@ export default function AdminAnalyticsPage() {
   const totalOrders = chartData?.reduce((sum, d) => sum + d.orders, 0) || 0;
 
   return (
-    <div className="p-8 max-w-6xl space-y-12">
+    <div className="p-8 space-y-12">
       <div className="flex items-center gap-3">
         <BarChart2 className="w-5 h-5 text-flame" />
         <h1 className="font-display text-2xl font-bold text-paper">Analytics</h1>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { RotateCcw, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/utils-shop";
 import Button from "@/components/ui/Button";
 import { csrfFetch } from "@/lib/auth/csrfFetch";
 
@@ -52,7 +51,7 @@ export default function AdminReturnsPage() {
   };
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
         <RotateCcw className="w-5 h-5 text-flame" />
         <h1 className="font-display text-2xl font-bold text-paper">Returns / RMA</h1>

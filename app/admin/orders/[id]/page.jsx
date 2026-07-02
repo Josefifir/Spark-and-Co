@@ -95,7 +95,7 @@ export default function AdminOrderDetailPage() {
   }
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-8">
       <Link href="/admin/orders" className="inline-flex items-center gap-2 text-sm text-paper-dim hover:text-paper mb-6">
         <ArrowLeft className="w-4 h-4" /> Back to orders
       </Link>

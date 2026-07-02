@@ -33,7 +33,7 @@ export default function AdminCustomersPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-10">
+    <div className="px-6 py-10">
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <Users className="w-5 h-5 text-flame" />

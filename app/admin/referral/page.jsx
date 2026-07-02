@@ -63,7 +63,7 @@ export default function ReferralSettingsPage() {
 
   if (loading) {
     return (
-      <div className="p-8 max-w-2xl">
+      <div className="p-8">
         <h1 className="font-display text-2xl font-bold text-paper mb-8">Referral Settings</h1>
         <p className="text-paper-dim">Loading…</p>
       </div>
@@ -71,7 +71,7 @@ export default function ReferralSettingsPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-8">
       <div className="flex items-center gap-3 mb-8">
         <Gift className="w-5 h-5 text-flame" />
         <h1 className="font-display text-2xl font-bold text-paper">Referral Settings</h1>

@@ -40,7 +40,7 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="font-display text-2xl font-bold text-paper">Products</h1>
         <div className="flex gap-2">

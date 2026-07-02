@@ -147,7 +147,7 @@ export default function AdminCategoriesPage() {
   };
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-8">
       <div className="flex items-center justify-between mb-3">
         <h1 className="font-display text-2xl font-bold text-paper">Categories</h1>
         <Button onClick={() => { setEditing(null); setModalOpen(true); }}>
