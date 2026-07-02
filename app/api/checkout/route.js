@@ -6,6 +6,7 @@ import Order from "@/lib/models/Order";
 import Customer from "@/lib/models/Customer";
 import LoyaltyTransaction from "@/lib/models/LoyaltyTransaction";
 import ShippingZone from "@/lib/models/ShippingZone";
+import FraudFlag from "@/lib/models/FraudFlag";
 import { stripe } from "@/lib/payments/stripe";
 import { createBtcpayInvoice } from "@/lib/payments/btcpayserver";
 import { generateOrderNumber } from "@/lib/utils-shop";
@@ -16,6 +17,7 @@ import { getCustomerSession } from "@/lib/auth/customerSession";
 import { sendLowStockAlert } from "@/lib/email/resend";
 import { getReferrerByCode } from "@/lib/referral";
 import cache, { CacheKeys, CacheTTL } from "@/lib/cache";
+import { scoreOrder } from "@/lib/fraud/riskScore";
 
 const CheckoutSchema = z.object({
   items: z
@@ -297,6 +299,21 @@ export async function POST(request) {
   // Check if customer is logged in
   const session = await getCustomerSession();
 
+  // ── Fraud scoring (before order is created) ──────────────────────────────
+  const ip = getClientIp(request);
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentOrderCount = await Order.countDocuments({
+    customerEmail: body.customerEmail.toLowerCase(),
+    createdAt: { $gte: oneHourAgo },
+  });
+
+  const { score: fraudScore, flags: fraudFlags } = scoreOrder({
+    email: body.customerEmail,
+    shippingCountry: body.shippingAddress.country,
+    totalCents: totalCents,
+    recentOrderCount,
+  });
+
   // Validate referral code — silently ignore invalid/self-referral codes
   let appliedReferralCode = null;
   if (body.referralCode) {
@@ -319,6 +336,9 @@ export async function POST(request) {
     }
   }
 
+  // isHighRisk is used to future-gate fulfillment; FraudFlag document signals review needed
+  const _isHighRisk = fraudScore >= 70;
+
   const order = await Order.create({
     orderNumber,
     items: orderItems,
@@ -339,16 +359,29 @@ export async function POST(request) {
     } : null,
     totalCents: finalTotalCents,
     currency: orderCurrency.toLowerCase(),
-    customer: session?.customerId || null, // Link to customer account if logged in
+    customer: session?.customerId || null,
     customerEmail: body.customerEmail,
     shippingAddress: body.shippingAddress,
     ageVerifiedAt: new Date(),
     paymentMethod: body.paymentMethod,
+    // High-risk orders are held for manual review (uses existing enum value 'pending'
+    // but a FraudFlag document signals that it needs review before fulfillment)
     paymentStatus: "pending",
     estimatedDeliveryDate: resolvedShippingRate?.estimatedMaxDays
       ? new Date(Date.now() + resolvedShippingRate.estimatedMaxDays * 24 * 60 * 60 * 1000)
       : null,
   });
+
+  // Create fraud flag record for high-risk or flagged orders (best-effort)
+  if (fraudScore > 0 && fraudFlags.length > 0) {
+    FraudFlag.create({
+      order: order._id,
+      email: body.customerEmail,
+      ip,
+      score: fraudScore,
+      flags: fraudFlags,
+    }).catch(() => {});
+  }
 
   // Decrement stock optimistically (reserved) using bulkWrite for better performance
   // A more advanced version would use a short-lived hold/expiry; kept simple here.

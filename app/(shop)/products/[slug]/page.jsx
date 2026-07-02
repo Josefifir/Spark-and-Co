@@ -1,6 +1,7 @@
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product";
 import ProductReview from "@/lib/models/ProductReview";
+import ProductQA from "@/lib/models/ProductQA";
 import { notFound } from "next/navigation";
 import ProductDetailClient from "@/components/shop/ProductDetailClient";
 
@@ -72,20 +73,24 @@ async function getProduct(slug) {
       .limit(4);
   }
 
-  // Fetch approved reviews
-  const reviews = await ProductReview.find({
-    product: product._id,
-    status: "approved",
-  })
-    .select("rating title text customerName orderNumber createdAt")
-    .sort({ createdAt: -1 })
-    .lean()
-    .limit(10);
+  // Fetch approved reviews and published Q&A in parallel
+  const [reviews, qaItems] = await Promise.all([
+    ProductReview.find({ product: product._id, status: "approved" })
+      .select("rating title text customerName orderNumber createdAt")
+      .sort({ createdAt: -1 })
+      .lean()
+      .limit(10),
+    ProductQA.find({ product: product._id, isPublished: true })
+      .select("question answer")
+      .lean()
+      .limit(20),
+  ]);
 
   return {
     product: JSON.parse(JSON.stringify(product)),
     relatedProducts: JSON.parse(JSON.stringify(relatedProducts)),
     reviews: JSON.parse(JSON.stringify(reviews)),
+    qaItems: JSON.parse(JSON.stringify(qaItems)),
   };
 }
 
@@ -98,7 +103,7 @@ export default async function ProductDetailPage({ params, searchParams }) {
   const resolvedSearchParams = await searchParams;
   const reviewToken = resolvedSearchParams?.reviewToken;
 
-  const { product, reviews } = data;
+  const { product, reviews, qaItems } = data;
   const priceFmt = (product.priceCents / 100).toFixed(2);
   const salePrice = product.salePriceCents
     ? (product.salePriceCents / 100).toFixed(2)
@@ -140,6 +145,18 @@ export default async function ProductDetailPage({ params, searchParams }) {
     }),
   };
 
+  const faqSchema = qaItems?.length > 0
+    ? {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        mainEntity: qaItems.map((qa) => ({
+          "@type": "Question",
+          name: qa.question,
+          acceptedAnswer: { "@type": "Answer", text: qa.answer || "" },
+        })),
+      }
+    : null;
+
   const breadcrumbSchema = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -160,6 +177,12 @@ export default async function ProductDetailPage({ params, searchParams }) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
+      {faqSchema && (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        />
+      )}
       <ProductDetailClient
         product={data.product}
         relatedProducts={data.relatedProducts}

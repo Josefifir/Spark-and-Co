@@ -3,7 +3,9 @@ import { stripe } from "@/lib/payments/stripe";
 import { dbConnect } from "@/lib/db";
 import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
+import Customer from "@/lib/models/Customer";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
+import { sendOrderConfirmationSMS } from "@/lib/sms/twilio";
 import { awardReferralCredit } from "@/lib/referral";
 import { awardLoyaltyPoints } from "@/lib/loyalty";
 import { generateInvoicePdf } from "@/lib/invoice/generateInvoicePdf";
@@ -46,6 +48,12 @@ export async function POST(request) {
         order.fulfillmentStatus = "processing";
         await order.save();
 
+        // Resolve customer phone for SMS (best-effort, non-blocking)
+        const customerPhone = order.customer
+          ? await Customer.findById(order.customer).select("phone").lean().then((c) => c?.phone || null).catch(() => null)
+          : null;
+        const orderWithPhone = { ...order.toObject(), customerPhone };
+
         await awardReferralCredit(order._id).catch((e) =>
           console.error("Referral credit error:", e)
         );
@@ -54,6 +62,9 @@ export async function POST(request) {
         );
         await sendOrderConfirmationEmail(order).catch((e) =>
           console.error("Order confirmation email error:", e)
+        );
+        sendOrderConfirmationSMS(orderWithPhone).catch((e) =>
+          console.error("Order confirmation SMS error:", e)
         );
         generateInvoicePdf(order).then(async (pdf) => {
           await Order.updateOne({ _id: order._id }, { $set: { invoiceGeneratedAt: new Date(), invoicePdfSize: pdf.length } });

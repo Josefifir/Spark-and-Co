@@ -30,6 +30,7 @@ export default function Header() {
     { href: "/products?category=refillable", label: t("nav.refillable") },
     { href: "/products?category=electric", label: t("nav.electric") },
     { href: "/products?category=lighter fuel", label: t("nav.lighterFuel") },
+    { href: "/bulk-order", label: "Bulk Order" },
   ];
 
   return (

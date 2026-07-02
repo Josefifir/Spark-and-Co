@@ -48,7 +48,29 @@ export default async function ProductsPage({ searchParams }) {
   const category = params?.category || "";
   const [products, categories] = await Promise.all([getProducts(category), getCategories()]);
 
-  return <ProductsListClient products={products} categories={categories} currentCategory={category} />;
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: category ? `${category.charAt(0).toUpperCase() + category.slice(1)} Lighters` : "All Products",
+    url: category ? `${SITE_URL}/products?category=${encodeURIComponent(category)}` : `${SITE_URL}/products`,
+    numberOfItems: products.length,
+    itemListElement: products.slice(0, 20).map((p, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/products/${p.slug}`,
+      name: p.name,
+    })),
+  };
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(itemListSchema) }}
+      />
+      <ProductsListClient products={products} categories={categories} currentCategory={category} />
+    </>
+  );
 }
 
 // Made with Bob

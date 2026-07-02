@@ -3,15 +3,31 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Heart, ShoppingBag } from "lucide-react";
+import { Heart, ShoppingBag, Share2 } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import { useCurrency } from "@/lib/currency/CurrencyContext";
 import { toast } from "sonner";
 
 export default function WishlistPageClient() {
   const [wishlist, setWishlist] = useState(null);
+  const [sharing, setSharing] = useState(false);
   const { addItem } = useCart();
   const { formatPrice } = useCurrency();
+
+  const handleShare = async () => {
+    setSharing(true);
+    try {
+      const res = await fetch("/api/customer/wishlist/share", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { toast.error(data.error || "Could not generate share link"); return; }
+      await navigator.clipboard.writeText(data.shareUrl);
+      toast.success("Share link copied to clipboard! Valid for 7 days.");
+    } catch {
+      toast.error("Could not copy link");
+    } finally {
+      setSharing(false);
+    }
+  };
 
   const load = () => {
     fetch("/api/customer/wishlist")
@@ -37,6 +53,16 @@ export default function WishlistPageClient() {
         <Heart className="w-5 h-5 text-flame" />
         <h1 className="font-display text-2xl font-bold text-paper">Wishlist</h1>
         <span className="text-steel text-sm">({wishlist.length})</span>
+        {wishlist.length > 0 && (
+          <button
+            onClick={handleShare}
+            disabled={sharing}
+            className="ml-auto flex items-center gap-1.5 text-xs text-steel hover:text-flame transition-colors border border-hairline hover:border-flame rounded-sm px-3 py-1.5"
+          >
+            <Share2 className="w-3.5 h-3.5" />
+            {sharing ? "Generating…" : "Share wishlist"}
+          </button>
+        )}
       </div>
 
       {wishlist.length === 0 ? (

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { csrfFetch } from "@/lib/auth/csrfFetch";
-import { LayoutDashboard, Package, ShoppingCart, Tag, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Users, TrendingDown, LogOut } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tag, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Users, TrendingDown, ShieldAlert, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const NAV = [
@@ -23,6 +23,7 @@ const NAV = [
   { href: "/admin/returns", label: "Returns", icon: RotateCcw },
   { href: "/admin/referral", label: "Referral Program", icon: Share2 },
   { href: "/admin/email-campaigns", label: "Email Campaigns", icon: Mail },
+  { href: "/admin/fraud", label: "Fraud Review", icon: ShieldAlert },
 ];
 
 export default function AdminLayout({ children }) {

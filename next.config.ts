@@ -6,17 +6,31 @@ import type { NextConfig } from "next";
 // Remove 'unsafe-eval' in production for security.
 const isDev = process.env.NODE_ENV !== "production";
 const btcpayHost = process.env.BTCPAY_HOST ?? "";
+// Live chat — set NEXT_PUBLIC_CRISP_ID to activate Crisp. Adjust domains for other vendors.
+const crispId = process.env.NEXT_PUBLIC_CRISP_ID ?? "";
 
 const scriptSrc = isDev
-  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.stripe.com https://storage.googleapis.com"
-  : "script-src 'self' 'unsafe-inline' https://*.stripe.com https://storage.googleapis.com";
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.stripe.com https://storage.googleapis.com" + (crispId ? " https://client.crisp.chat" : "")
+  : "script-src 'self' 'unsafe-inline' https://*.stripe.com https://storage.googleapis.com" + (crispId ? " https://client.crisp.chat" : "");
 
 // In dev allow http: images so localhost-served uploads (and any absolute URLs
 // still in the DB) are not blocked. In production only https: is permitted.
 const imgSrc = isDev ? "img-src 'self' data: http: https:" : "img-src 'self' data: https:";
 
-const connectSrc = ["connect-src 'self'", "https://*.stripe.com", "https://*.stripe.network", btcpayHost].filter(Boolean).join(" ");
-const frameSrc = ["frame-src 'self'", "https://*.stripe.com", "https://*.stripe.network", btcpayHost].filter(Boolean).join(" ");
+const connectSrc = [
+  "connect-src 'self'",
+  "https://*.stripe.com",
+  "https://*.stripe.network",
+  btcpayHost,
+  crispId ? "https://client.crisp.chat wss://*.crisp.chat" : "",
+].filter(Boolean).join(" ");
+const frameSrc = [
+  "frame-src 'self'",
+  "https://*.stripe.com",
+  "https://*.stripe.network",
+  btcpayHost,
+  crispId ? "https://*.crisp.chat" : "",
+].filter(Boolean).join(" ");
 
 const csp = [
   "default-src 'self'",

@@ -10,6 +10,7 @@ import SocialProofPopup from "@/components/shop/SocialProofPopup";
 import AbandonedCartTracker from "@/components/shop/AbandonedCartTracker";
 import ExitIntentPopup from "@/components/shop/ExitIntentPopup";
 import { CompareProvider, CompareBar } from "@/components/shop/ProductCompare";
+import LiveChatWidget from "@/components/shop/LiveChatWidget";
 
 export default function ShopLayout({ children }) {
   return (
@@ -27,6 +28,7 @@ export default function ShopLayout({ children }) {
                 <AbandonedCartTracker />
                 <ExitIntentPopup />
                 <CompareBar />
+                <LiveChatWidget />
               </CompareProvider>
             </AgeGate>
           </CustomerAuthProvider>

@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { 
-  Package, ShoppingCart, AlertTriangle, DollarSign, 
-  TrendingUp, TrendingDown, Star, Tag, Globe, CreditCard 
+import {
+  Package, ShoppingCart, AlertTriangle, DollarSign,
+  TrendingUp, TrendingDown, Star, Tag, Globe, CreditCard, Radio
 } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
 
@@ -84,6 +84,9 @@ const STATUS_COLORS = {
 export default function AdminDashboardPage() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [liveKPIs, setLiveKPIs] = useState(null);
+  const [liveConnected, setLiveConnected] = useState(false);
+  const esRef = useRef(null);
 
   useEffect(() => {
     fetch("/api/admin/stats")
@@ -93,6 +96,20 @@ export default function AdminDashboardPage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, []);
+
+  // SSE live KPI stream
+  useEffect(() => {
+    const es = new EventSource("/api/admin/stats/stream");
+    esRef.current = es;
+
+    es.onopen = () => setLiveConnected(true);
+    es.onmessage = (e) => {
+      try { setLiveKPIs(JSON.parse(e.data)); } catch {}
+    };
+    es.onerror = () => setLiveConnected(false);
+
+    return () => es.close();
   }, []);
 
   if (loading) {
@@ -115,36 +132,64 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="p-8">
-      <h1 className="font-display text-2xl font-bold text-paper mb-8">Dashboard</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="font-display text-2xl font-bold text-paper">Dashboard</h1>
+        <span className={`flex items-center gap-1.5 text-xs font-mono-tech ${liveConnected ? "text-success" : "text-steel"}`}>
+          <Radio className="w-3 h-3" />
+          {liveConnected ? "Live" : "Offline"}
+        </span>
+      </div>
+
+      {/* Live KPI strip — only shown once the SSE stream delivers data */}
+      {liveKPIs && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6 p-4 bg-panel border border-flame/20 rounded-sm">
+          <div>
+            <p className="text-xs font-mono-tech text-steel uppercase tracking-wider mb-1">Revenue Today</p>
+            <p className="font-display text-lg font-bold text-flame">{formatPrice(liveKPIs.revenueTodayCents)}</p>
+          </div>
+          <div>
+            <p className="text-xs font-mono-tech text-steel uppercase tracking-wider mb-1">Orders Today</p>
+            <p className="font-display text-lg font-bold text-paper">{liveKPIs.ordersToday}</p>
+          </div>
+          <div>
+            <p className="text-xs font-mono-tech text-steel uppercase tracking-wider mb-1">Pending</p>
+            <p className={`font-display text-lg font-bold ${liveKPIs.pendingOrders > 0 ? "text-flame" : "text-paper"}`}>{liveKPIs.pendingOrders}</p>
+          </div>
+          <div>
+            <p className="text-xs font-mono-tech text-steel uppercase tracking-wider mb-1">Low Stock</p>
+            <p className={`font-display text-lg font-bold ${liveKPIs.lowStock > 0 ? "text-danger" : "text-paper"}`}>{liveKPIs.lowStock}</p>
+          </div>
+        </div>
+      )}
 
       {/* Overview Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
-        <StatCard 
-          icon={DollarSign} 
-          label="Total Revenue" 
-          value={formatPrice(stats.overview.totalRevenueCents)} 
-          accent 
+        <StatCard
+          icon={DollarSign}
+          label="Total Revenue"
+          value={formatPrice(stats.overview.totalRevenueCents)}
+          accent
           subtitle={`${formatPrice(stats.overview.revenueThisMonthCents)} this month`}
           trend={stats.overview.revenueGrowthPercent}
         />
-        <StatCard 
-          icon={ShoppingCart} 
-          label="Paid Orders" 
-          value={stats.overview.paidOrders} 
-          subtitle={`${stats.overview.ordersToday} today, ${stats.overview.ordersThisMonth} this month`}
+        <StatCard
+          icon={ShoppingCart}
+          label="Paid Orders"
+          value={stats.overview.paidOrders}
+          subtitle={`${liveKPIs?.ordersToday ?? stats.overview.ordersToday} today, ${stats.overview.ordersThisMonth} this month`}
         />
-        <StatCard 
-          icon={Package} 
-          label="Active Products" 
-          value={stats.overview.totalProducts} 
+        <StatCard
+          icon={Package}
+          label="Active Products"
+          value={stats.overview.totalProducts}
           subtitle={`Avg order: ${formatPrice(stats.overview.averageOrderValueCents)}`}
         />
-        <StatCard 
-          icon={AlertTriangle} 
-          label="Low Stock" 
-          value={stats.overview.lowStockProducts} 
-          accent={stats.overview.lowStockProducts > 0}
-          subtitle={`${stats.overview.pendingOrders} pending orders`}
+        <StatCard
+          icon={AlertTriangle}
+          label="Low Stock"
+          value={liveKPIs?.lowStock ?? stats.overview.lowStockProducts}
+          accent={(liveKPIs?.lowStock ?? stats.overview.lowStockProducts) > 0}
+          subtitle={`${liveKPIs?.pendingOrders ?? stats.overview.pendingOrders} pending orders`}
         />
       </div>
 
