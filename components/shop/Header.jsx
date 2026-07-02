@@ -36,7 +36,7 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 bg-graphite/95 backdrop-blur border-b border-hairline">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center gap-4">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0">
             <span className="text-flame text-lg sm:text-xl group-hover:animate-flicker">🔥</span>
@@ -45,8 +45,8 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav — only shown when there's enough horizontal room */}
-          <nav className="hidden xl:flex items-center gap-3 2xl:gap-5 text-xs 2xl:text-sm text-paper-dim">
+          {/* Desktop nav — centered, takes remaining space */}
+          <nav className="hidden xl:flex flex-1 items-center justify-center gap-4 2xl:gap-6 text-xs 2xl:text-sm text-paper-dim">
             {navLinks.map((l) => (
               <Link key={l.href} href={l.href} className="hover:text-paper transition-colors whitespace-nowrap">
                 {l.label}
@@ -54,8 +54,8 @@ export default function Header() {
             ))}
           </nav>
 
-          {/* Right-side actions */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Right-side actions — pushed to end */}
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto xl:ml-0">
             {/* Desktop-only switchers + search */}
             <div className="hidden sm:flex items-center gap-2">
               <SearchBar />
