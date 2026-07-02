@@ -10,7 +10,7 @@ export default function Footer() {
   return (
     <footer className="border-t border-hairline mt-12 sm:mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-10">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 sm:gap-10">
           <div className="col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-3">
               <span className="text-flame">🔥</span>
@@ -30,6 +30,16 @@ export default function Footer() {
               <li><Link href="/products?category=torch" className="text-paper-dim hover:text-paper transition-colors">{t('nav.torch')}</Link></li>
               <li><Link href="/products?category=electric" className="text-paper-dim hover:text-paper transition-colors">{t('nav.electric')}</Link></li>
               <li><Link href="/products?category=refillable" className="text-paper-dim hover:text-paper transition-colors">{t('nav.refillable')}</Link></li>
+            </ul>
+          </div>
+
+          <div>
+            <h3 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
+              Company
+            </h3>
+            <ul className="space-y-2.5 text-sm">
+              <li><Link href="/about" className="text-paper-dim hover:text-paper transition-colors">{t('footer.aboutUs')}</Link></li>
+              <li><Link href="/contact" className="text-paper-dim hover:text-paper transition-colors">{t('footer.contactUs')}</Link></li>
             </ul>
           </div>
 
