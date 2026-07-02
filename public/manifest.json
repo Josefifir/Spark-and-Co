@@ -5,6 +5,11 @@
   "description": "Machined lighters built for everyday carry.",
   "start_url": "/",
   "scope": "/",
+  "serviceworker": {
+    "src": "/sw.js",
+    "scope": "/",
+    "update_via_cache": "none"
+  },
   "display": "standalone",
   "display_override": ["tabbed", "window-controls-overlay", "standalone", "minimal-ui", "browser"],
   "orientation": "portrait",
