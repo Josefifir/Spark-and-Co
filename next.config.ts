@@ -23,6 +23,7 @@ const csp = [
   "font-src 'self' data:",
   `connect-src 'self' https://api.stripe.com${btcpayHost ? ` ${btcpayHost}` : ""}`,
   `frame-src 'self' https://js.stripe.com https://hooks.stripe.com${btcpayHost ? ` ${btcpayHost}` : ""}`,
+  "worker-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -4,7 +4,7 @@
 //   - Navigation (HTML pages): Network-first with offline fallback
 //   - API routes (/api/*): Network-only (never cache)
 
-const CACHE_NAME = "strike-v1";
+const CACHE_NAME = "strike-v2";
 
 // Pages to pre-cache so the shell loads offline
 const PRECACHE_URLS = ["/", "/products", "/cart"];
