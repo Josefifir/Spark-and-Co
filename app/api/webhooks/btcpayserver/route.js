@@ -6,6 +6,8 @@ import Product from "@/lib/models/Product";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import { awardReferralCredit } from "@/lib/referral";
 import { awardLoyaltyPoints } from "@/lib/loyalty";
+import { generateInvoicePdf } from "@/lib/invoice/generateInvoicePdf";
+import { scheduleFollowUpEmails } from "@/lib/email/followUp";
 
 export const runtime = "nodejs";
 
@@ -52,7 +54,11 @@ export async function POST(request) {
 
         await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
         await awardLoyaltyPoints(order._id).catch((e) => console.error("Loyalty points error:", e));
-        await sendOrderConfirmationEmail(order);
+        await sendOrderConfirmationEmail(order).catch((e) => console.error("Order confirmation email error:", e));
+        generateInvoicePdf(order).then(async (pdf) => {
+          await Order.updateOne({ _id: order._id }, { $set: { invoiceGeneratedAt: new Date(), invoicePdfSize: pdf.length } });
+        }).catch((e) => console.error("Auto-invoice error:", e));
+        scheduleFollowUpEmails(order._id).catch((e) => console.error("Follow-up schedule error:", e));
       }
       break;
 

@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingBag, ShieldCheck, User, Menu, X } from "lucide-react";
+import { ShoppingBag, User, Menu, X } from "lucide-react";
 import { useCart } from "@/components/shop/CartContext";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
 import CurrencySwitcher from "@/components/shop/CurrencySwitcher";
 import LanguageSwitcher from "@/components/shop/LanguageSwitcher";
 import SearchBar from "@/components/shop/SearchBar";
+import DarkModeToggle from "@/components/shop/DarkModeToggle";
 import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 
@@ -59,6 +60,7 @@ export default function Header() {
               <SearchBar />
               <LanguageSwitcher />
               <CurrencySwitcher />
+              <DarkModeToggle />
             </div>
 
             {/* Account */}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShieldCheck, Lock, Bitcoin, Truck } from "lucide-react";
 import { useLocale } from "@/lib/i18n/LocaleContext";
 import ProductCard from "@/components/shop/ProductCard";
+import BundleDeals from "@/components/shop/BundleDeals";
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
@@ -97,6 +98,21 @@ export default function HomePageClient({ products }) {
             ))}
           </div>
         )}
+      </section>
+
+      {/* Bundle deals */}
+      <BundleDeals />
+
+      {/* Press / social proof strip */}
+      <section className="border-t border-hairline">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-6">
+          <p className="text-center text-[10px] font-mono-tech text-steel uppercase tracking-wider mb-4">As seen in</p>
+          <div className="flex flex-wrap justify-center gap-6 sm:gap-10 items-center">
+            {["EDC Weekly", "r/EDC", "BestLighters.com", "GearPatrol"].map((name) => (
+              <span key={name} className="text-sm font-medium text-steel/50 hover:text-steel transition-colors">{name}</span>
+            ))}
+          </div>
+        </div>
       </section>
     </div>
   );

@@ -13,15 +13,6 @@ export default function AccountLayout({ children }) {
   const [loading, setLoading] = useState(true);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    checkAuth();
-  }, []);
-
-  // Close mobile menu when route changes
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
-
   async function checkAuth() {
     try {
       const res = await fetch("/api/customer/me");
@@ -38,6 +29,14 @@ export default function AccountLayout({ children }) {
       setLoading(false);
     }
   }
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { checkAuth(); }, []);
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   async function handleLogout() {
     try {
@@ -68,6 +67,7 @@ export default function AccountLayout({ children }) {
     { href: "/account/orders", label: "Orders" },
     { href: "/account/addresses", label: "Addresses" },
     { href: "/account/loyalty", label: "Loyalty Points" },
+    { href: "/account/wishlist", label: "Wishlist" },
     { href: "/account/referral", label: "Referral" },
   ];
 

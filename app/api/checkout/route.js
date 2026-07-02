@@ -3,6 +3,8 @@ import { z } from "zod";
 import { dbConnect } from "@/lib/db";
 import Product from "@/lib/models/Product";
 import Order from "@/lib/models/Order";
+import Customer from "@/lib/models/Customer";
+import LoyaltyTransaction from "@/lib/models/LoyaltyTransaction";
 import ShippingZone from "@/lib/models/ShippingZone";
 import { stripe } from "@/lib/payments/stripe";
 import { createBtcpayInvoice } from "@/lib/payments/btcpayserver";
@@ -46,6 +48,7 @@ const CheckoutSchema = z.object({
   paymentMethod: z.enum(["stripe", "bitcoin", "sepa", "revolut"]),
   discountCode: z.string().max(20).optional(),
   referralCode: z.string().max(20).optional(),
+  loyaltyPointsToRedeem: z.number().int().min(0).optional(),
 });
 
 export async function POST(request) {
@@ -175,6 +178,21 @@ export async function POST(request) {
     discountCodeUsed = discountValidation.code;
   }
 
+  // Loyalty points redemption — validate the customer has enough points
+  let loyaltyDiscountCents = 0;
+  let loyaltyPointsRedeemed = 0;
+  if (body.loyaltyPointsToRedeem && body.loyaltyPointsToRedeem > 0 && session?.customerId) {
+    const customer = await Customer.findById(session.customerId).select("loyaltyPoints").lean();
+    const available = customer?.loyaltyPoints || 0;
+    const pointsToRedeem = Math.min(body.loyaltyPointsToRedeem, available);
+    if (pointsToRedeem > 0) {
+      // 1 point = 1 cent, cap at order subtotal
+      loyaltyDiscountCents = Math.min(pointsToRedeem, subtotalCents - discountAppliedCents);
+      loyaltyPointsRedeemed = loyaltyDiscountCents; // 1:1
+    }
+  }
+  discountAppliedCents += loyaltyDiscountCents;
+
   // Look up shipping cost server-side from the rate stored in MongoDB.
   // Never trust the client-submitted cost.
   // Shipping zones are stable data (changed only by admins) — cache for 30 minutes.
@@ -288,12 +306,27 @@ export async function POST(request) {
     }
   }
 
+  // Deduct loyalty points before order creation (atomic decrement)
+  if (loyaltyPointsRedeemed > 0) {
+    const updated = await Customer.findOneAndUpdate(
+      { _id: session.customerId, loyaltyPoints: { $gte: loyaltyPointsRedeemed } },
+      { $inc: { loyaltyPoints: -loyaltyPointsRedeemed } },
+      { new: true, select: "loyaltyPoints" }
+    );
+    // If the customer didn't have enough points (race condition), abort
+    if (!updated) {
+      return NextResponse.json({ error: "Insufficient loyalty points." }, { status: 400 });
+    }
+  }
+
   const order = await Order.create({
     orderNumber,
     items: orderItems,
     subtotalCents: finalSubtotalCents,
     discountAppliedCents: finalDiscountCents,
     discountCodeUsed,
+    loyaltyPointsRedeemed,
+    loyaltyPointsDiscountCents: loyaltyDiscountCents,
     referralCode: appliedReferralCode,
     shippingCents: finalShippingCents,
     shippingMethod: resolvedShippingRate ? {
@@ -327,6 +360,19 @@ export async function POST(request) {
   }));
   
   await Product.bulkWrite(stockUpdates);
+
+  // Record loyalty redemption transaction (best-effort)
+  if (loyaltyPointsRedeemed > 0 && session?.customerId) {
+    const customer = await Customer.findById(session.customerId).select("loyaltyPoints").lean();
+    LoyaltyTransaction.create({
+      customer: session.customerId,
+      order: order._id,
+      type: "redeem",
+      points: -loyaltyPointsRedeemed,
+      description: `Redeemed at checkout for order #${orderNumber}`,
+      balanceAfter: customer?.loyaltyPoints ?? 0,
+    }).catch(() => {});
+  }
 
   // Fire low-stock alerts (best-effort, non-blocking)
   for (const item of orderItems) {

@@ -8,6 +8,8 @@ import Footer from "@/components/shop/Footer";
 import CookieConsent from "@/components/shop/CookieConsent";
 import SocialProofPopup from "@/components/shop/SocialProofPopup";
 import AbandonedCartTracker from "@/components/shop/AbandonedCartTracker";
+import ExitIntentPopup from "@/components/shop/ExitIntentPopup";
+import { CompareBar } from "@/components/shop/ProductCompare";
 
 export default function ShopLayout({ children }) {
   return (
@@ -22,6 +24,8 @@ export default function ShopLayout({ children }) {
               <CookieConsent />
               <SocialProofPopup />
               <AbandonedCartTracker />
+              <ExitIntentPopup />
+              <CompareBar />
             </AgeGate>
           </CustomerAuthProvider>
         </CartProvider>

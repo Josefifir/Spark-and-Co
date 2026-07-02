@@ -16,6 +16,17 @@
   --color-success: #3fb950;
 }
 
+/* Light mode overrides */
+html.light-mode {
+  --color-graphite: #f5f4f1;
+  --color-panel: #ffffff;
+  --color-panel-raised: #f0eeeb;
+  --color-paper: #1a1a1a;
+  --color-paper-dim: #4a4a4a;
+  --color-steel: #6b7280;
+  --color-hairline: #d1d5db;
+}
+
 @theme inline {
   --color-graphite: var(--color-graphite);
   --color-panel: var(--color-panel);

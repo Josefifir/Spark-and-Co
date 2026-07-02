@@ -65,6 +65,12 @@ export const metadata: Metadata = {
   },
   alternates: {
     canonical: SITE_URL,
+    languages: {
+      "en": `${SITE_URL}`,
+      "de": `${SITE_URL}`,   // same URL, language switcher in header handles locale
+      "fr": `${SITE_URL}`,
+      "x-default": `${SITE_URL}`,
+    },
   },
 };
 

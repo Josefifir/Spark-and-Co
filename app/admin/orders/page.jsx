@@ -1,4 +1,5 @@
 "use client";
+// CSV export handled via /api/admin/orders/export
 
 import { useEffect, useState } from "react";
 import Link from "next/link";

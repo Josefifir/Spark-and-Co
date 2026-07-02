@@ -16,6 +16,12 @@ import FlashSaleBadge from "@/components/shop/FlashSaleBadge";
 import ProductSpecsTable from "@/components/shop/ProductSpecsTable";
 import ShippingEstimator from "@/components/shop/ShippingEstimator";
 import ProductQA from "@/components/shop/ProductQA";
+import StickyAddToCart from "@/components/shop/StickyAddToCart";
+import WishlistButton from "@/components/shop/WishlistButton";
+import PersonalisationPreview from "@/components/shop/PersonalisationPreview";
+import RecentlyViewed from "@/components/shop/RecentlyViewed";
+import { CompareButton } from "@/components/shop/ProductCompare";
+import { trackProductView } from "@/lib/recentlyViewed";
 
 export default function ProductDetailClient({ product, relatedProducts = [], reviews = [], reviewToken = null }) {
   const { addItem } = useCart();
@@ -32,7 +38,8 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
       .then((r) => r.json())
       .then((d) => setSoldToday(d.count || 0))
       .catch(() => {});
-  }, [product.slug]);
+    trackProductView(product);
+  }, [product.slug]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const isOnSale = product.salePriceCents && product.saleEndsAt && new Date(product.saleEndsAt) > new Date();
   const displayPrice = isOnSale ? product.salePriceCents : product.priceCents;
@@ -129,17 +136,18 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
             <span className="font-mono-tech text-2xl text-flame font-medium">
               {formatPrice(displayPrice, 'USD')}
             </span>
-            <div className="text-right">
-              <span className="text-xs font-mono-tech text-steel block">SKU {product.sku}</span>
+            <div className="text-right flex flex-col items-end gap-1">
+              <span className="text-xs font-mono-tech text-steel">SKU {product.sku}</span>
               {soldToday > 0 && (
-                <span className="text-xs text-success mt-0.5 block">
-                  🔥 {soldToday} sold today
-                </span>
+                <span className="text-xs text-success">🔥 {soldToday} sold today</span>
+              )}
+              {inStock && product.stock <= 5 && (
+                <span className="text-xs text-danger font-medium">Only {product.stock} left!</span>
               )}
             </div>
           </div>
 
-          {/* Personalisation input */}
+          {/* Personalisation input + live preview */}
           {product.personalisationEnabled && (
             <div className="mb-5">
               <label className="block text-xs font-mono-tech text-paper-dim uppercase tracking-wider mb-1.5">
@@ -154,11 +162,16 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
                 maxLength={product.personalisationMaxLength || 20}
               />
               <p className="text-xs text-steel mt-1">{personalisationText.length}/{product.personalisationMaxLength || 20} characters</p>
+              <PersonalisationPreview text={personalisationText} maxLength={product.personalisationMaxLength || 20} />
             </div>
           )}
 
           {inStock ? (
             <>
+              <div className="flex items-center gap-3 mb-6">
+                <WishlistButton productId={product._id} />
+                <CompareButton product={product} />
+              </div>
               <div className="flex items-center gap-4 mb-6">
                 <span className="text-xs font-mono-tech text-paper-dim uppercase">{t('product.quantity')}</span>
                 <div className="flex items-center border border-hairline rounded-sm">
@@ -183,7 +196,7 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
                 </span>
               </div>
 
-              <Button size="lg" className="w-full" onClick={handleAdd}>
+              <Button id="pdp-add-to-cart-btn" size="lg" className="w-full" onClick={handleAdd}>
                 {t('product.addToCart')} — {formatPrice(displayPrice * quantity, 'USD')}
               </Button>
             </>
@@ -252,6 +265,12 @@ export default function ProductDetailClient({ product, relatedProducts = [], rev
           </div>
         </div>
       </section>
+
+      {/* Recently viewed */}
+      <RecentlyViewed currentSlug={product.slug} />
+
+      {/* Sticky add to cart bar (appears when main CTA scrolls out of view) */}
+      <StickyAddToCart product={product} displayPrice={displayPrice} />
     </div>
   );
 }

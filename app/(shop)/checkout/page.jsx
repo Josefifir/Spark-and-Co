@@ -12,6 +12,9 @@ import { Lock, ShieldCheck, Bitcoin, CreditCard, Building2, Info, Truck, Package
 import { toast } from "sonner";
 import StripePaymentForm from "@/components/shop/StripePaymentForm";
 import { getData } from 'country-list';
+import LoyaltyRedemption from "@/components/shop/LoyaltyRedemption";
+import FreeShippingBar from "@/components/shop/FreeShippingBar";
+import DutyEstimator from "@/components/shop/DutyEstimator";
 
 
 const COUNTRIES = getData().map(({ code, name }) => ({
@@ -53,6 +56,8 @@ export default function CheckoutPage() {
   const [discountCode, setDiscountCode] = useState("");
   const [appliedDiscount, setAppliedDiscount] = useState(null);
   const [validatingDiscount, setValidatingDiscount] = useState(false);
+  const [loyaltyPointsToRedeem, setLoyaltyPointsToRedeem] = useState(0);
+  const [loyaltyDiscount, setLoyaltyDiscount] = useState(0);
   const [vatBreakdown, setVatBreakdown] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
@@ -279,6 +284,7 @@ export default function CheckoutPage() {
           paymentMethod,
           discountCode: appliedDiscount?.code || undefined,
           referralCode: referralCode || undefined,
+          loyaltyPointsToRedeem: loyaltyPointsToRedeem || undefined,
           currency,
           locale,
         }),
@@ -548,12 +554,18 @@ export default function CheckoutPage() {
             </div>
             {appliedDiscount && (
               <p className="text-sm text-flame mt-2">
-                ✓ {appliedDiscount.discountType === "percentage" 
+                ✓ {appliedDiscount.discountType === "percentage"
                   ? t('checkout.percentOff', { percent: appliedDiscount.discountValue })
                   : t('checkout.amountOff', { amount: formatPrice(appliedDiscount.discountValue) })}
               </p>
             )}
           </section>
+
+          {/* Loyalty points redemption */}
+          <LoyaltyRedemption
+            subtotalCents={subtotalCents}
+            onRedeem={(pts) => { setLoyaltyPointsToRedeem(pts); setLoyaltyDiscount(pts); }}
+          />
 
           <section>
             <h2 className="font-mono-tech text-xs uppercase tracking-wider text-steel mb-4">
@@ -658,6 +670,12 @@ export default function CheckoutPage() {
                   <span className="font-mono-tech text-green-600">-{formatPrice(appliedDiscount.discountCents)}</span>
                 </div>
               )}
+              {loyaltyDiscount > 0 && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-success">Loyalty points</span>
+                  <span className="font-mono-tech text-success">-{formatPrice(loyaltyDiscount)}</span>
+                </div>
+              )}
               
               {selectedShipping && (
                 <div className="flex justify-between text-sm">
@@ -698,9 +716,11 @@ export default function CheckoutPage() {
             <div className="border-t border-hairline pt-4 flex justify-between">
               <span className="text-paper font-medium">{t('checkout.total')}</span>
               <span className="font-mono-tech text-flame font-medium">
-                {formatPrice(finalSubtotal + (selectedShipping?.cost || 0))}
+                {formatPrice(Math.max(0, finalSubtotal - loyaltyDiscount + (selectedShipping?.cost || 0)))}
               </span>
             </div>
+            <FreeShippingBar />
+            <DutyEstimator country={form.country} totalCents={Math.max(0, finalSubtotal - loyaltyDiscount + (selectedShipping?.cost || 0))} />
             
             <div className="mt-6 space-y-3">
               <Button

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { csrfFetch } from "@/lib/auth/csrfFetch";
-import { LayoutDashboard, Package, ShoppingCart, Tag, LogOut, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Star } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tag, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Users, TrendingDown, Download } from "lucide-react";
 import { toast } from "sonner";
 
 const NAV = [
@@ -14,9 +14,11 @@ const NAV = [
   { href: "/admin/discounts", label: "Discount Codes", icon: Percent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquare },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
+  { href: "/admin/customers", label: "Customers", icon: Users },
   { href: "/admin/shipping", label: "Shipping Zones", icon: Truck },
   { href: "/admin/qa", label: "Q&A", icon: HelpCircle },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart2 },
+  { href: "/admin/inventory-forecast", label: "Inv. Forecast", icon: TrendingDown },
   { href: "/admin/gift-cards", label: "Gift Cards", icon: Gift },
   { href: "/admin/returns", label: "Returns", icon: RotateCcw },
   { href: "/admin/referral", label: "Referral Program", icon: Share2 },
