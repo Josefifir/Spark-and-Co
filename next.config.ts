@@ -8,8 +8,8 @@ const isDev = process.env.NODE_ENV !== "production";
 const btcpayHost = process.env.BTCPAY_HOST ?? "";
 
 const scriptSrc = isDev
-  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com"
-  : "script-src 'self' 'unsafe-inline' https://js.stripe.com";
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com https://storage.googleapis.com"
+  : "script-src 'self' 'unsafe-inline' https://js.stripe.com https://storage.googleapis.com";
 
 // In dev allow http: images so localhost-served uploads (and any absolute URLs
 // still in the DB) are not blocked. In production only https: is permitted.

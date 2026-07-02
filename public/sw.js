@@ -1,102 +1,56 @@
-// Strike & Co. — Service Worker v3
-// Strategies:
-//   - Static shell assets (/_next/static/): Cache-first
-//   - Navigation (HTML pages):             Network-first → cached → offline.html
-//   - API routes (/api/*):                 Network-only
-//   - Background Sync:                     Retry failed non-GET requests
-//   - Periodic Sync:                       Refresh precache hourly
-//   - Push Notifications:                  Show branded notification
+// Strike & Co. — Service Worker
+// Based on PWABuilder "Offline copy of pages + offline fallback" template
+// Strategy: StaleWhileRevalidate for all pages, offline.html as fallback
 
-const CACHE_NAME = "strike-v3";
-const OFFLINE_URL = "/offline.html";
+const CACHE = "strike-v4";
+const offlineFallbackPage = "/offline.html";
 
-const PRECACHE_URLS = ["/", "/products", "/cart", OFFLINE_URL];
+importScripts("https://storage.googleapis.com/workbox-cdn/releases/5.1.2/workbox-sw.js");
 
-// ── Install ────────────────────────────────────────────────────────────────
-self.addEventListener("install", (event) => {
-  self.skipWaiting();
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
+});
+
+self.addEventListener("install", async (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS).catch(() => {}))
+    caches.open(CACHE).then((cache) => cache.add(offlineFallbackPage))
   );
 });
 
-// ── Activate ───────────────────────────────────────────────────────────────
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
-      )
-      .then(() => self.clients.claim())
-  );
-});
+if (workbox.navigationPreload.isSupported()) {
+  workbox.navigationPreload.enable();
+}
 
-// ── Fetch ──────────────────────────────────────────────────────────────────
+// Cache all visited pages (stale-while-revalidate)
+workbox.routing.registerRoute(
+  new RegExp("/*"),
+  new workbox.strategies.StaleWhileRevalidate({
+    cacheName: CACHE,
+  })
+);
+
+// Navigation: try preload → network → offline fallback
 self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET, cross-origin, and API requests
-  if (
-    request.method !== "GET" ||
-    url.origin !== self.location.origin ||
-    url.pathname.startsWith("/api/")
-  ) {
-    return;
-  }
-
-  // /_next/static/ — cache-first (hashed, immutable)
-  if (url.pathname.startsWith("/_next/static/")) {
+  if (event.request.mode === "navigate") {
     event.respondWith(
-      caches.match(request).then(
-        (cached) =>
-          cached ||
-          fetch(request).then((response) => {
-            if (response.ok) {
-              caches.open(CACHE_NAME).then((c) => c.put(request, response.clone()));
-            }
-            return response;
-          })
-      )
-    );
-    return;
-  }
+      (async () => {
+        try {
+          const preloadResp = await event.preloadResponse;
+          if (preloadResp) return preloadResp;
 
-  // Navigation — network-first, then cache, then offline page
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            caches.open(CACHE_NAME).then((c) => c.put(request, response.clone()));
-          }
-          return response;
-        })
-        .catch(() =>
-          caches
-            .match(request)
-            .then((cached) => cached || caches.match(OFFLINE_URL))
-        )
-    );
-    return;
-  }
-
-  // Everything else — network-first, silent cache fallback
-  event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response.ok) {
-          caches.open(CACHE_NAME).then((c) => c.put(request, response.clone()));
+          return await fetch(event.request);
+        } catch {
+          const cache = await caches.open(CACHE);
+          return await cache.match(offlineFallbackPage);
         }
-        return response;
-      })
-      .catch(() => caches.match(request))
-  );
+      })()
+    );
+  }
 });
 
 // ── Background Sync ────────────────────────────────────────────────────────
-// Queued POST requests (e.g. add-to-cart while offline) are retried here.
 self.addEventListener("sync", (event) => {
   if (event.tag === "strike-sync") {
     event.waitUntil(replayQueuedRequests());
@@ -114,36 +68,31 @@ async function replayQueuedRequests() {
         await fetch(item.url, { method: item.method, headers: item.headers, body: item.body });
         await idbDelete(store, item.id);
       } catch {
-        // Will retry next sync
+        // retry next sync
       }
     }
-  } catch {
-    // IndexedDB not available
-  }
+  } catch { /* IndexedDB unavailable */ }
 }
 
 // ── Periodic Background Sync ───────────────────────────────────────────────
-// Refreshes the precached shell pages in the background.
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "strike-refresh") {
-    event.waitUntil(refreshPrecache());
+    event.waitUntil(
+      caches.open(CACHE).then((cache) =>
+        Promise.allSettled(
+          ["/", "/products", "/cart", offlineFallbackPage].map((url) =>
+            fetch(url).then((res) => { if (res.ok) cache.put(url, res); })
+          )
+        )
+      )
+    );
   }
 });
-
-async function refreshPrecache() {
-  const cache = await caches.open(CACHE_NAME);
-  await Promise.allSettled(
-    PRECACHE_URLS.map((url) =>
-      fetch(url).then((res) => { if (res.ok) cache.put(url, res); })
-    )
-  );
-}
 
 // ── Push Notifications ─────────────────────────────────────────────────────
 self.addEventListener("push", (event) => {
   let data = { title: "Strike & Co.", body: "You have a new update.", icon: "/icons/icon-192.png" };
   try { data = { ...data, ...event.data.json() }; } catch {}
-
   event.waitUntil(
     self.registration.showNotification(data.title, {
       body: data.body,
@@ -170,11 +119,12 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// ── IndexedDB helpers (minimal) ────────────────────────────────────────────
+// ── IndexedDB helpers ──────────────────────────────────────────────────────
 function openQueue() {
   return new Promise((resolve, reject) => {
     const req = indexedDB.open("strike-queue", 1);
-    req.onupgradeneeded = (e) => e.target.result.createObjectStore("requests", { keyPath: "id", autoIncrement: true });
+    req.onupgradeneeded = (e) =>
+      e.target.result.createObjectStore("requests", { keyPath: "id", autoIncrement: true });
     req.onsuccess = (e) => resolve(e.target.result);
     req.onerror = reject;
   });
