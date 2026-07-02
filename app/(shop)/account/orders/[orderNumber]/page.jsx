@@ -385,8 +385,16 @@ export default function OrderDetailPage() {
                   )}
                 </div>
                 <div className="flex-1">
-                  <h4 className="font-medium text-paper">{item.name}</h4>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-medium text-paper">{item.name}</h4>
+                    {item.isPreorder && (
+                      <span className="text-xs font-mono-tech text-flame border border-flame/30 bg-flame/5 rounded px-1.5 py-0.5">PRE-ORDER</span>
+                    )}
+                  </div>
                   <p className="text-sm text-paper-dim">Quantity: {item.quantity}</p>
+                  {item.personalisationText && (
+                    <p className="text-xs text-paper-dim mt-1">✏️ Engraving: <span className="text-paper italic">{item.personalisationText}</span></p>
+                  )}
                   <p className="text-sm font-medium text-paper mt-1">
                     {formatPrice(item.priceCents, order.currency)} each
                   </p>

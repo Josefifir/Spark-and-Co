@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Package, Download, ExternalLink } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
 import Button from "@/components/ui/Button";
@@ -14,7 +14,6 @@ const FULFILLMENT_OPTIONS = ["unfulfilled", "processing", "shipped", "delivered"
 
 export default function AdminOrderDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
   const [order, setOrder] = useState(null);
   const [tracking, setTracking] = useState("");
   const [saving, setSaving] = useState(false);
@@ -191,9 +190,17 @@ export default function AdminOrderDetailPage() {
         </h2>
         <div className="divide-y divide-hairline">
           {order.items.map((item, i) => (
-            <div key={i} className="flex justify-between p-5 text-sm">
-              <span className="text-paper">{item.name} × {item.quantity}</span>
-              <span className="font-mono-tech text-paper-dim">{formatPrice(item.priceCents * item.quantity)}</span>
+            <div key={i} className="flex justify-between p-5 text-sm gap-4">
+              <div>
+                <span className="text-paper">{item.name} × {item.quantity}</span>
+                {item.isPreorder && (
+                  <span className="ml-2 text-xs font-mono-tech text-flame border border-flame/30 bg-flame/5 rounded px-1.5 py-0.5">PRE-ORDER</span>
+                )}
+                {item.personalisationText && (
+                  <p className="text-xs text-paper-dim mt-1">✏️ Engraving: <span className="text-paper italic">{item.personalisationText}</span></p>
+                )}
+              </div>
+              <span className="font-mono-tech text-paper-dim shrink-0">{formatPrice(item.priceCents * item.quantity)}</span>
             </div>
           ))}
         </div>

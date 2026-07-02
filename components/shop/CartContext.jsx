@@ -30,7 +30,14 @@ export function CartProvider({ children }) {
       const existing = prev.find((i) => i.productId === product._id);
       if (existing) {
         return prev.map((i) =>
-          i.productId === product._id ? { ...i, quantity: i.quantity + quantity } : i
+          i.productId === product._id
+            ? {
+                ...i,
+                quantity: i.quantity + quantity,
+                // Update personalisationText if re-adding the same item with a new text
+                ...(product.personalisationText !== undefined && { personalisationText: product.personalisationText }),
+              }
+            : i
         );
       }
       return [
@@ -42,6 +49,7 @@ export function CartProvider({ children }) {
           priceCents: product.priceCents,
           image: product.images?.[0],
           quantity,
+          personalisationText: product.personalisationText || null,
         },
       ];
     });

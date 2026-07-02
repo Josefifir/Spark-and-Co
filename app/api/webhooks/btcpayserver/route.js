@@ -5,6 +5,7 @@ import Order from "@/lib/models/Order";
 import Product from "@/lib/models/Product";
 import { sendOrderConfirmationEmail } from "@/lib/email/resend";
 import { awardReferralCredit } from "@/lib/referral";
+import { awardLoyaltyPoints } from "@/lib/loyalty";
 
 export const runtime = "nodejs";
 
@@ -50,6 +51,7 @@ export async function POST(request) {
         await order.save();
 
         await awardReferralCredit(order._id).catch((e) => console.error("Referral credit error:", e));
+        await awardLoyaltyPoints(order._id).catch((e) => console.error("Loyalty points error:", e));
         await sendOrderConfirmationEmail(order);
       }
       break;

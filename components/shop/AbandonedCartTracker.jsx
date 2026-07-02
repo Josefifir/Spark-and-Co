@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/shop/CartContext";
+import { useCustomerAuth } from "@/lib/auth/CustomerAuthContext";
 
 const SESSION_KEY = "cart-session-id";
 
@@ -17,9 +18,20 @@ function getSessionId() {
 
 // This component syncs cart state to the server for abandoned cart recovery.
 // It's a background component — renders nothing.
-export default function AbandonedCartTracker({ customerEmail }) {
+export default function AbandonedCartTracker() {
   const { items, hydrated } = useCart();
+  const { isLoggedIn } = useCustomerAuth();
   const syncTimeout = useRef(null);
+  const [customerEmail, setCustomerEmail] = useState(null);
+
+  // Fetch customer email once when logged in
+  useEffect(() => {
+    if (!isLoggedIn) { setCustomerEmail(null); return; }
+    fetch("/api/customer/me")
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setCustomerEmail(d?.customer?.email || null))
+      .catch(() => {});
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (!hydrated) return;

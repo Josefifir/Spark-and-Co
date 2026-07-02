@@ -6,6 +6,7 @@ import Link from "next/link";
 import { CheckCircle2, Clock, XCircle, Truck } from "lucide-react";
 import { formatPrice } from "@/lib/utils-shop";
 import Button from "@/components/ui/Button";
+import { markCartRecovered } from "@/components/shop/AbandonedCartTracker";
 
 function StatusBadge({ status }) {
   const map = {
@@ -26,6 +27,11 @@ function CheckoutSuccessContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("order");
   const [order, setOrder] = useState(null);
+
+  // Mark the cart as recovered so the abandoned-cart cron doesn't email this customer
+  useEffect(() => {
+    markCartRecovered();
+  }, []);
 
   useEffect(() => {
     if (!orderNumber) return;

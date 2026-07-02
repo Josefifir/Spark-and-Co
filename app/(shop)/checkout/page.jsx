@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/components/shop/CartContext";
 import { useCurrency } from "@/lib/currency/CurrencyContext";
@@ -55,45 +55,15 @@ export default function CheckoutPage() {
   const [validatingDiscount, setValidatingDiscount] = useState(false);
   const [vatBreakdown, setVatBreakdown] = useState(null);
   const [savedAddresses, setSavedAddresses] = useState([]);
-  const [customer, setCustomer] = useState(null);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [shippingRates, setShippingRates] = useState([]);
   const [selectedShipping, setSelectedShipping] = useState(null);
   const [loadingShipping, setLoadingShipping] = useState(false);
 
-  // Fetch customer and saved addresses on mount
-  useEffect(() => {
-    async function fetchCustomerData() {
-      try {
-        const res = await fetch("/api/customer/me");
-        if (res.ok) {
-          const data = await res.json();
-          setCustomer(data.customer);
-          setForm(f => ({ ...f, customerEmail: data.customer.email }));
-          
-          // Fetch saved addresses
-          const addressRes = await fetch("/api/customer/addresses");
-          if (addressRes.ok) {
-            const addressData = await addressRes.json();
-            setSavedAddresses(addressData.addresses);
-            
-            // Auto-select default address
-            const defaultAddr = addressData.addresses.find(a => a.isDefault);
-            if (defaultAddr) {
-              handleSelectAddress(defaultAddr._id);
-            }
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch customer data:", error);
-      }
-    }
-    fetchCustomerData();
-  }, []);
-
-  const handleSelectAddress = (addressId) => {
+  const handleSelectAddress = useCallback((addressId, addresses) => {
     setSelectedAddressId(addressId);
-    const address = savedAddresses.find(a => a._id === addressId);
+    const list = addresses || savedAddresses;
+    const address = list.find(a => a._id === addressId);
     if (address) {
       setForm(f => ({
         ...f,
@@ -106,7 +76,37 @@ export default function CheckoutPage() {
         country: address.country,
       }));
     }
-  };
+  }, [savedAddresses]);
+
+  // Fetch customer and saved addresses on mount
+  useEffect(() => {
+    async function fetchCustomerData() {
+      try {
+        const res = await fetch("/api/customer/me");
+        if (res.ok) {
+          const data = await res.json();
+          setForm(f => ({ ...f, customerEmail: data.customer.email }));
+          
+          // Fetch saved addresses
+          const addressRes = await fetch("/api/customer/addresses");
+          if (addressRes.ok) {
+            const addressData = await addressRes.json();
+            setSavedAddresses(addressData.addresses);
+            
+            // Auto-select default address
+            const defaultAddr = addressData.addresses.find(a => a.isDefault);
+            if (defaultAddr) {
+              handleSelectAddress(defaultAddr._id, addressData.addresses);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch customer data:", error);
+      }
+    }
+    fetchCustomerData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const update = (field) => (e) => {
     const value = e.target.value;
@@ -135,17 +135,8 @@ export default function CheckoutPage() {
 
   useEffect(() => {
     calculateVAT(form.country);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [subtotalCents, appliedDiscount, form.country]);
-
-  // Calculate shipping when address changes
-  useEffect(() => {
-    if (form.country && form.city && form.postalCode) {
-      calculateShipping();
-    } else {
-      setShippingRates([]);
-      setSelectedShipping(null);
-    }
-  }, [form.country, form.city, form.postalCode, form.state, subtotalCents, appliedDiscount]);
 
   async function calculateShipping() {
     setLoadingShipping(true);
@@ -190,6 +181,17 @@ export default function CheckoutPage() {
       setLoadingShipping(false);
     }
   }
+
+  // Calculate shipping when address changes
+  useEffect(() => {
+    if (form.country && form.city && form.postalCode) {
+      calculateShipping();
+    } else {
+      setShippingRates([]);
+      setSelectedShipping(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form.country, form.city, form.postalCode, form.state, subtotalCents, appliedDiscount]);
 
   const handleApplyDiscount = async () => {
     if (!discountCode.trim()) {
@@ -249,7 +251,11 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: items.map((i) => ({ productId: i.productId, quantity: i.quantity })),
+          items: items.map((i) => ({
+            productId: i.productId,
+            quantity: i.quantity,
+            ...(i.personalisationText && { personalisationText: i.personalisationText }),
+          })),
           customerEmail: form.customerEmail,
           shippingAddress: {
             name: form.name,
