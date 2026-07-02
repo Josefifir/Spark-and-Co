@@ -23,10 +23,14 @@ export default function ShippingEstimator({ priceCents }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          country: countryCode,
-          postalCode: postal,
-          city: "",
-          subtotalCents: priceCents,
+          address: {
+            country: countryCode,
+            postalCode: postal,
+            city: "",
+          },
+          orderDetails: {
+            subtotalCents: priceCents,
+          },
         }),
       });
       const data = await res.json();
