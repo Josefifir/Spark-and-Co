@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { csrfFetch } from "@/lib/auth/csrfFetch";
-import { LayoutDashboard, Package, ShoppingCart, Tag, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Users, TrendingDown, Download } from "lucide-react";
+import { LayoutDashboard, Package, ShoppingCart, Tag, Flame, Percent, MessageSquare, Truck, HelpCircle, BarChart2, Gift, RotateCcw, Share2, Boxes, Mail, Users, TrendingDown, LogOut } from "lucide-react";
 import { toast } from "sonner";
 
 const NAV = [
