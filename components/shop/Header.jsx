@@ -45,8 +45,8 @@ export default function Header() {
             </span>
           </Link>
 
-          {/* Desktop nav — xl breakpoint gives enough room for long German labels */}
-          <nav className="hidden xl:flex items-center gap-5 text-sm text-paper-dim">
+          {/* Desktop nav — only shown when there's enough horizontal room */}
+          <nav className="hidden xl:flex items-center gap-3 2xl:gap-5 text-xs 2xl:text-sm text-paper-dim">
             {navLinks.map((l) => (
               <Link key={l.href} href={l.href} className="hover:text-paper transition-colors whitespace-nowrap">
                 {l.label}
@@ -87,10 +87,10 @@ export default function Header() {
               )}
             </Link>
 
-            {/* Hamburger — mobile + tablet */}
+            {/* Hamburger — shown below xl (matches nav breakpoint) */}
             <button
               onClick={() => setMobileOpen((o) => !o)}
-              className="lg:hidden flex items-center justify-center w-9 h-9 rounded-sm border border-hairline hover:border-steel transition-colors"
+              className="xl:hidden flex items-center justify-center w-9 h-9 rounded-sm border border-hairline hover:border-steel transition-colors"
               aria-label="Toggle navigation"
               aria-expanded={mobileOpen}
             >
@@ -105,12 +105,12 @@ export default function Header() {
         <>
           {/* Backdrop */}
           <div
-            className="lg:hidden fixed inset-0 z-30 bg-graphite/80 backdrop-blur-sm"
+            className="xl:hidden fixed inset-0 z-30 bg-graphite/80 backdrop-blur-sm"
             onClick={() => setMobileOpen(false)}
             aria-hidden="true"
           />
           {/* Panel */}
-          <div className="lg:hidden fixed top-14 sm:top-16 left-0 right-0 z-40 bg-graphite border-b border-hairline shadow-xl">
+          <div className="xl:hidden fixed top-14 sm:top-16 left-0 right-0 z-40 bg-graphite border-b border-hairline shadow-xl">
             <nav className="max-w-6xl mx-auto px-4 py-4 flex flex-col gap-1">
               {/* Search — visible in mobile drawer only (hidden sm:flex in header) */}
               <div className="pb-3 border-b border-hairline mb-1">
